@@ -3,8 +3,10 @@ const { db } = require("./../config/database");
 
 exports.getTraceur = (req, res) => {
     const q = `
-    SELECT *
+    SELECT traceur.*, model_traceur.nom_model, etat_traceur.nom_etat_traceur
         FROM traceur 
+        INNER JOIN model_traceur ON traceur.model = model_traceur.id_model_traceur
+        INNER JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
     WHERE est_supprime = 0
     `;
      
