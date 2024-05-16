@@ -36,9 +36,9 @@ exports.postClient = async (req, res) => {
 
 exports.postClientContact = async (req, res) => {
     try {
-        const q = 'INSERT INTO contact_client(`id_client`, `nom_contact`, `telephone_contact`, `poste_contact`, `email_contact`) VALUES(?,?,?,?,?,?)';
+        const q = 'INSERT INTO contact_client(`id_client`,`nom_contact`, `telephone_contact`, `poste_contact`, `email_contact`) VALUES(?,?,?,?,?,?)';
         const values = [
-            req.body.nom_client,
+            req.body.id_client,
             req.body.nom_contact,
             req.body.telephone_contact,
             req.body.poste_contact,
