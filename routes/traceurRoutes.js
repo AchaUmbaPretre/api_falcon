@@ -4,6 +4,6 @@ const router = express.Router();
 
 router.get('/', getTraceur)
 router.get('/traceur_etat', getTraceurEtat)
-router.post('/post_traceur', postTraceur)
+router.post('/', postTraceur)
 
 module.exports = router;
