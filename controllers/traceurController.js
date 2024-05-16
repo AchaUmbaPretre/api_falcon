@@ -14,6 +14,18 @@ exports.getTraceur = (req, res) => {
     });
 }
 
+exports.getTraceurEtat = (req, res) => {
+    const q = `
+    SELECT *
+        FROM etat_traceur
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
 exports.postTraceur = async (req, res) => {
     try {
         const q = 'INSERT INTO traceur(`model`, `commentaire`, `id_client`,`numero_serie`, `id_etat_traceur`, `observation`) VALUES(?,?,?,?,?,?)';
