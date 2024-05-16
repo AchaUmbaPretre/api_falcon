@@ -35,8 +35,9 @@ exports.postClient = async (req, res) => {
 
 
 exports.postClientContact = async (req, res) => {
+    
     try {
-        const q = 'INSERT INTO contact_client(`id_client`,`nom_contact`, `telephone_contact`, `poste_contact`, `email_contact`) VALUES(?,?,?,?,?,?)';
+        const q = 'INSERT INTO contact_client(`id_client`,`nom_contact`, `telephone_contact`, `poste_contact`, `email_contact`) VALUES(?,?,?,?,?)';
         const values = [
             req.body.id_client,
             req.body.nom_contact,
@@ -49,6 +50,7 @@ exports.postClientContact = async (req, res) => {
         return res.json('Processus réussi');
     } catch (error) {
         console.error(error);
+        console.log(error)
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du contact." });
     }
 }
