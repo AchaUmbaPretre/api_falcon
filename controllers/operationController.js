@@ -2,9 +2,10 @@ const { db } = require("./../config/database");
 
 exports.getOperation = (req, res) => {
     const q = `
-    SELECT *
+    SELECT operations.*, client.nom_client
         FROM operations 
-    WHERE est_supprime = 0
+        INNER JOIN client ON operations.id_client = client.id_client
+    WHERE operations.est_supprime = 0
     `;
      
     db.query(q, (error, data) => {

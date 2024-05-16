@@ -3,6 +3,6 @@ const { getOperation, postOperation } = require("../controllers/operationControl
 const router = express.Router();
 
 router.get('/', getOperation)
-router.post('/post_operation', postOperation)
+router.post('/', postOperation)
 
 module.exports = router
