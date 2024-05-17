@@ -97,3 +97,17 @@ exports.logout = (req, res) => {
 
   res.status(200).json('Utilisateur est déconnecté');
 };
+
+
+//Personnel
+exports.getPersonnel = (req, res) => {
+    const q = `
+    SELECT *
+        FROM users
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
