@@ -1,8 +1,11 @@
 const express = require("express");
-const { getAffectations, postAffectations } = require("../controllers/affectationController");
+const { getAffectations, postAffectations, getNumero } = require("../controllers/affectationController");
 const router = express.Router();
 
 router.get('/', getAffectations)
-router.post('/form_affectation',postAffectations)
+router.post('/',postAffectations)
+
+//Numero
+router.get('/numero', getNumero)
 
 module.exports = router;

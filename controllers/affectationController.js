@@ -2,9 +2,11 @@ const { db } = require("./../config/database");
 
 exports.getAffectations = (req, res) => {
     const q = `
-    SELECT *
+    SELECT *, numero.numero, traceur.model
         FROM affectations 
-    WHERE est_supprime = 0
+        INNER JOIN numero ON affectations.id_numero = numero.id_numero
+        INNER JOIN traceur ON affectations.id_traceur = traceur.id_traceur
+    WHERE affectations.est_supprime = 0
     `;
      
     db.query(q, (error, data) => {
@@ -27,4 +29,16 @@ exports.postAffectations = async (req, res) => {
         console.error(error);
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du client." });
     }
+}
+//Numero
+exports.getNumero = (req, res) => {
+    const q = `
+    SELECT *
+        FROM numero
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
 }

@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 const usersRoutes = require('./routes/userRoutes');
 const clientRoutes = require('./routes/clientRoutes');
 const operationRoutes = require('./routes/operationRoutes');
+const affectationRoutes = require('./routes/affectationRoutes');
 const traceurRoutes = require('./routes/traceurRoutes');
 const vehiculeRoutes = require('./routes/vehiculeRoutes');
 
@@ -39,7 +40,7 @@ app.use('/users', usersRoutes)
 app.use('/client', clientRoutes)
 app.use('/operation', operationRoutes)
 app.use('/traceur', traceurRoutes)
-app.use('/affectation', traceurRoutes)
+app.use('/affectation', affectationRoutes)
 app.use('/vehicule', vehiculeRoutes)
 
 
