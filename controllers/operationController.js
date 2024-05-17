@@ -22,7 +22,6 @@ exports.postOperation = async (req, res) => {
 
     const { photo_plaque, photo_traceur } = req.files;
 
-    console.log(req.files)
 
     // Récupère les chemins d'accès des fichiers téléchargés
     const photoPlaqueUrl = photo_plaque[0].path;
