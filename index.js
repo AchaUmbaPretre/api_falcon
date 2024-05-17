@@ -10,11 +10,9 @@ const affectationRoutes = require('./routes/affectationRoutes');
 const traceurRoutes = require('./routes/traceurRoutes');
 const vehiculeRoutes = require('./routes/vehiculeRoutes');
 
-
 const app = express();
 
 dotenv.config();
-
 
 // Configuration de l'environnement de développement
 const environment = process.env.PORT || 'development';
