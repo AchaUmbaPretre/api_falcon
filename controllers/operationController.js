@@ -20,23 +20,23 @@ exports.postOperation = async (req, res) => {
         return res.status(400).json({ error: "Aucun fichier téléchargé" });
     }
 
-    const { photo_plaque, photo_traceur } = req.files;
+    const photoPlaqueFile = req.files['photo_plaque'][0]; 
+    const photoTraceurFile = req.files['photo_traceur'][0];
 
+    const photoPlaqueUrl = `/uploads/${photoPlaqueFile.filename}`;
+    const photoTraceurUrl = `/uploads/${photoTraceurFile.filename}`;
 
-    // Récupère les chemins d'accès des fichiers téléchargés
-    const photoPlaqueUrl = photo_plaque[0].path;
-    const photoTraceurUrl = photo_traceur[0].path;
     res.setHeader('Content-Type', 'multipart/form-data');
 
     try {
-        const q = 'INSERT INTO operations(`id_client`, `site`, `id_superviseur`,`id_technicien`, `date_operation`, `id_type_operation`,`id_traceur`,`probleme`,`observation`,`kilometre`, `tension`, `photo_plaque`,`photo_traceur`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)';
+        const q = 'INSERT INTO operations(`id_client`, `site`, `id_superviseur`,`id_technicien`, `date_operation`, `id_type_operations`,`id_traceur`,`probleme`,`observation`,`kilometre`, `tension`, `photo_plaque`,`photo_traceur`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)';
         const values = [
             req.body.id_client,
             req.body.site,
             req.body.id_superviseur,
             req.body.id_technicien,
             req.body.date_operation,
-            req.body.id_type_operation,
+            req.body.id_type_operations,
             req.body.id_traceur,
             req.body.probleme,
             req.body.observation,
