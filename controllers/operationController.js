@@ -2,9 +2,15 @@ const { db } = require("./../config/database");
 
 exports.getOperation = (req, res) => {
     const q = `
-    SELECT operations.*, client.nom_client
-        FROM operations 
-        INNER JOIN client ON operations.id_client = client.id_client
+    SELECT operations.*, client.nom_client, users.username AS superviseur, site.nom_site, 
+    traceur.numero_serie, type_operations.nom_type_operations AS type_operations, 
+    users.username AS technicien
+            FROM operations 
+            INNER JOIN client ON operations.id_client = client.id_client
+            INNER JOIN users ON operations.id_superviseur = users.id
+            INNER JOIN site ON operations.site = site.id_site
+            INNER JOIN traceur ON operations.id_traceur = traceur.id_traceur
+            INNER JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
     WHERE operations.est_supprime = 0
     `;
      
