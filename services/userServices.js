@@ -22,7 +22,7 @@ const userService = {
     },
 
     createUser: async (userData) => {
-        // Vérifier si l'utilisateur existe déjà
+
         const existingUserQuery = 'SELECT * FROM users WHERE email = ?';
         const values = [userData.email];
         const existingUser = await db.query(existingUserQuery, values);
@@ -32,11 +32,8 @@ const userService = {
         if (existingUser.length > 0) {
           throw new Error("L'utilisateur existe déjà");
         }
-      
-        // Hacher le mot de passe avant de le stocker dans la base de données
         const hashedPassword = await bcrypt.hash(userData.password, 10);
-      
-        // Insérer l'utilisateur dans la base de données avec le mot de passe haché
+
         const insertQuery = 'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)';
         const [result] = await db.query(insertQuery, [userData.username, userData.email, hashedPassword]);
         const userId = result.insertId;
