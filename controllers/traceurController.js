@@ -48,7 +48,7 @@ exports.postTraceur = async (req, res) => {
             req.body.model,
             req.body.id_client,
             req.body.numero_serie,
-            req.body.id_etat_traceur
+            req.body.id_etat_traceur || 1
         ];
 
         await db.query(q, values);

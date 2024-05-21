@@ -13,6 +13,20 @@ exports.getClients = (req, res) => {
     });
 }
 
+exports.getClientAll = (req, res) => {
+    const q = `
+    SELECT client.*, contact_client.nom_contact, contact_client.telephone_contact, contact_client.poste_contact, contact_client.email_contact
+        FROM client 
+        INNER JOIN contact_client ON client.id_client = contact_client.id_client
+    WHERE est_supprime = 0
+            `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
 exports.postClient = async (req, res) => {
     try {
         const q = 'INSERT INTO client(`nom_client`, `nom_principal`, `poste`, `telephone`, `adresse`, `email`) VALUES(?,?,?,?,?,?)';
