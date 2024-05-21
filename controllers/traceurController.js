@@ -42,15 +42,13 @@ exports.getModelTraceur = (req, res) => {
 
 exports.postTraceur = async (req, res) => {
     try {
-        const q = 'INSERT INTO traceur(`model`, `commentaire`, `id_client`,`numero_serie`, `id_etat_traceur`, `observation`) VALUES(?,?,?,?,?,?)';
+        const q = 'INSERT INTO traceur(`model`,`id_client`,`numero_serie`, `id_etat_traceur`) VALUES(?,?,?,?)';
 
         const values = [
             req.body.model,
-            req.body.commentaire,
             req.body.id_client,
             req.body.numero_serie,
-            req.body.id_etat_traceur,
-            req.body.observation
+            req.body.id_etat_traceur
         ];
 
         await db.query(q, values);
