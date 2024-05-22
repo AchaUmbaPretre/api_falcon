@@ -2,16 +2,26 @@ const { db } = require("./../config/database");
 
 exports.getOperation = (req, res) => {
     const q = `
-    SELECT operations.*, client.nom_client, users.username AS superviseur, site.nom_site, 
-    traceur.numero_serie, type_operations.nom_type_operations AS type_operations, 
-    users.username AS technicien
+            SELECT 
+                operations.*, 
+                client.nom_client, 
+                superviseur.username AS superviseur, 
+                site.nom_site, 
+                traceur.numero_serie, 
+                type_operations.nom_type_operations AS type_operations, 
+                technicien.username AS technicien,
+                user_cr.username AS user_cr
             FROM operations 
-            INNER JOIN client ON operations.id_client = client.id_client
-            INNER JOIN users ON operations.id_superviseur = users.id
-            INNER JOIN site ON operations.site = site.id_site
-            INNER JOIN traceur ON operations.id_traceur = traceur.id_traceur
-            INNER JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
-    WHERE operations.est_supprime = 0
+                INNER JOIN client ON operations.id_client = client.id_client
+                INNER JOIN users AS superviseur ON operations.id_superviseur = superviseur.id
+                INNER JOIN users AS technicien ON operations.id_technicien = technicien.id
+                INNER JOIN users AS user_cr ON operations.user_cr = user_cr.id
+                INNER JOIN site ON operations.site = site.id_site
+                LEFT JOIN traceur ON operations.id_traceur = traceur.id_traceur
+                LEFT JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
+            WHERE operations.est_supprime = 0
+            ORDER BY operations.date_operation DESC;
+
     `;
      
     db.query(q, (error, data) => {
@@ -35,7 +45,7 @@ exports.postOperation = async (req, res) => {
     res.setHeader('Content-Type', 'multipart/form-data');
 
     try {
-        const q = 'INSERT INTO operations(`id_client`, `site`, `id_superviseur`,`id_technicien`, `date_operation`, `id_type_operations`,`id_traceur`,`probleme`,`observation`,`kilometre`, `tension`, `photo_plaque`,`photo_traceur`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)';
+        const q = 'INSERT INTO operations(`id_client`, `site`, `id_superviseur`,`id_technicien`, `date_operation`, `id_type_operations`,`id_traceur`,`probleme`,`observation`,`kilometre`, `tension`, `photo_plaque`,`photo_traceur`, `user_cr`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
         const values = [
             req.body.id_client,
             req.body.site,
@@ -49,7 +59,8 @@ exports.postOperation = async (req, res) => {
             req.body.kilometre,
             req.body.tension,
             photoPlaqueUrl,
-            photoTraceurUrl
+            photoTraceurUrl,
+            req.body.user_cr
         ];
 
         db.query(q, values, (errorProduit, dataProduit) => {
