@@ -3,11 +3,13 @@ const { db } = require("./../config/database");
 
 exports.getTraceur = (req, res) => {
     const q = `
-    SELECT traceur.*, model_traceur.nom_model, etat_traceur.nom_etat_traceur
+            SELECT traceur.*, model_traceur.nom_model, etat_traceur.nom_etat_traceur, client.nom_client
         FROM traceur 
         INNER JOIN model_traceur ON traceur.model = model_traceur.id_model_traceur
-        INNER JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
-    WHERE est_supprime = 0
+        LEFT JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
+        LEFT JOIN client ON traceur.id_client = client.id_client
+        WHERE traceur.est_supprime = 0
+        ORDER BY traceur.date_entree DESC;
     `;
      
     db.query(q, (error, data) => {
