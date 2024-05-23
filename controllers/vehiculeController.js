@@ -45,3 +45,19 @@ exports.getMarque = (req, res) => {
         return res.status(200).json(data);
     });
 }
+
+exports.postMarque = async (req, res) => {
+    try {
+        const q = 'INSERT INTO marque(`nom_marque`) VALUES(?)';
+
+        const values = [
+            req.body.nom_marque
+        ];
+
+        await db.query(q, values);
+        return res.json('Processus réussi');
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du vehicule." });
+    }
+}
