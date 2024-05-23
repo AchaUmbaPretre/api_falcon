@@ -10,7 +10,7 @@ exports.getOperation = (req, res) => {
     traceur.numero_serie, 
     type_operations.nom_type_operations AS type_operations, 
     technicien.username AS technicien,
-    user_cr.username AS user_cr
+    user_cr.username AS user_cr, numero.numero
 FROM operations 
     INNER JOIN client ON operations.id_client = client.id_client
     INNER JOIN users AS superviseur ON operations.id_superviseur = superviseur.id
@@ -19,6 +19,8 @@ FROM operations
     INNER JOIN site ON operations.site = site.id_site
     INNER JOIN traceur ON operations.id_traceur = traceur.id_traceur
     INNER JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
+    INNER JOIN affectations ON traceur.id_traceur = affectations.id_traceur
+    INNER JOIN numero ON affectations.id_numero = numero.id_numero
 WHERE operations.est_supprime = 0
 ORDER BY operations.date_operation DESC;
 
