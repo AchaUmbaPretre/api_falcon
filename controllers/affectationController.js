@@ -79,26 +79,35 @@ exports.getNumero = (req, res) => {
 
 exports.postNumero = async (req, res) => {
     try {
-        const checkQuery = 'SELECT COUNT(*) AS count FROM numero WHERE numero = ?';
-        db.query(checkQuery, [req.body.numero], (err, results) => {
+        const numeros = req.body.numeros; // S'attendre à ce que req.body.numeros soit un tableau de numéros
+
+        if (!Array.isArray(numeros) || numeros.length === 0) {
+            return res.status(400).json({ message: "Veuillez fournir une liste de numéros." });
+        }
+
+        const placeholders = numeros.map(() => '?').join(', ');
+        const checkQuery = `SELECT numero FROM numero WHERE numero IN (${placeholders})`;
+        
+        db.query(checkQuery, numeros, (err, results) => {
             if (err) {
                 console.error(err);
-                return res.status(500).json({ error: "Une erreur s'est produite lors de la vérification du numéro." });
+                return res.status(500).json({ error: "Une erreur s'est produite lors de la vérification des numéros." });
             }
 
-            if (results[0].count > 0) {
-                return res.status(400).json({ message: `Le numéro ${req.body.numero} existe déjà.` });
+            const existingNumeros = results.map(row => row.numero);
+            const newNumeros = numeros.filter(numero => !existingNumeros.includes(numero));
+
+            if (newNumeros.length === 0) {
+                return res.status(400).json({ message: "Tous les numéros fournis existent déjà." });
             }
 
-            const insertQuery = 'INSERT INTO numero(`numero`) VALUES(?)';
-            const values = [
-                req.body.numero
-            ];
+            const insertQuery = 'INSERT INTO numero(`numero`) VALUES ' + newNumeros.map(() => '(?)').join(', ');
+            const values = newNumeros;
 
             db.query(insertQuery, values, (err, results) => {
                 if (err) {
                     console.error(err);
-                    return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout d'un nouveau numéro." });
+                    return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout des nouveaux numéros." });
                 }
 
                 return res.json('Processus réussi');
@@ -106,6 +115,7 @@ exports.postNumero = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout d'un nouveau numéro." });
+        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout des nouveaux numéros." });
     }
 };
+
