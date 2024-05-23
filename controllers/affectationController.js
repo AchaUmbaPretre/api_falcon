@@ -17,19 +17,39 @@ exports.getAffectations = (req, res) => {
 
 exports.postAffectations = async (req, res) => {
     try {
-        const q = 'INSERT INTO affectations(`id_numero`, `id_traceur` ) VALUES(?,?)';
-        const values = [
-            req.body.id_numero,
-            req.body.id_traceur
-        ];
+        const checkQuery = 'SELECT COUNT(*) AS count FROM affectations WHERE id_traceur = ?';
+        
+        db.query(checkQuery, [req.body.id_traceur], (err, results) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: "Une erreur s'est produite lors de la vérification du traceur." });
+            }
 
-        await db.query(q, values);
-        return res.json('Processus réussi');
+            if (results[0].count > 0) {
+                return res.status(400).json({ message: `Le traceur numero ${req.body.id_traceur} est déjà associé à un numéro.` });
+            }
+
+            const insertQuery = 'INSERT INTO affectations(`id_numero`, `id_traceur`) VALUES(?,?)';
+            const values = [
+                req.body.id_numero,
+                req.body.id_traceur
+            ];
+
+            db.query(insertQuery, values, (err, results) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout de l'affectation." });
+                }
+
+                return res.json('Processus réussi');
+            });
+        });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du client." });
+        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout de l'affectation." });
     }
-}
+};
+
 //Numero
 exports.getNumero = (req, res) => {
     const q = `
@@ -45,15 +65,33 @@ exports.getNumero = (req, res) => {
 
 exports.postNumero = async (req, res) => {
     try {
-        const q = 'INSERT INTO numero(`numero`) VALUES(?)';
-        const values = [
-            req.body.numero
-        ];
+        const checkQuery = 'SELECT COUNT(*) AS count FROM numero WHERE numero = ?';
+        db.query(checkQuery, [req.body.numero], (err, results) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: "Une erreur s'est produite lors de la vérification du numéro." });
+            }
 
-        await db.query(q, values);
-        return res.json('Processus réussi');
+            if (results[0].count > 0) {
+                return res.status(400).json({ message: `Le numéro ${req.body.numero} existe déjà.` });
+            }
+
+            const insertQuery = 'INSERT INTO numero(`numero`) VALUES(?)';
+            const values = [
+                req.body.numero
+            ];
+
+            db.query(insertQuery, values, (err, results) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout d'un nouveau numéro." });
+                }
+
+                return res.json('Processus réussi');
+            });
+        });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout d'un nouveau numéro." });
     }
-}
+};
