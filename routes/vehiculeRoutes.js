@@ -2,7 +2,7 @@ const express = require("express");
 const { getVehicule, postVehicule, getMarque, postMarque } = require("../controllers/vehiculeController");
 const router = express.Router();
 
-router.get('/',getVehicule )
+router.get('/',getVehicule)
 router.post('/', postVehicule)
 
 //Marque

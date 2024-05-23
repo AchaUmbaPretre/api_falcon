@@ -2,18 +2,25 @@ const { db } = require("./../config/database");
 
 
 exports.getVehicule = (req, res) => {
+    const id_client = req.query.id_client;
     const q = `
-        SELECT *, marque.nom_marque, client.nom_client
-            FROM vehicule 
+        SELECT vehicule.*, marque.nom_marque, client.nom_client
+        FROM vehicule
         INNER JOIN marque ON vehicule.id_marque = marque.id_marque
         INNER JOIN client ON client.id_client = vehicule.id_client
-            `;
-     
-    db.query(q, (error, data) => {
-        if (error) res.status(500).send(error);
+        ${id_client ? `WHERE client.id_client = ?` : ''}
+    `;
+
+    const params = id_client ? [id_client] : [];
+
+    db.query(q, params, (error, data) => {
+        if (error) {
+            return res.status(500).send(error);
+        }
         return res.status(200).json(data);
     });
-}
+};
+
 
 exports.postVehicule = async (req, res) => {
     try {
