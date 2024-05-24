@@ -1,6 +1,19 @@
 const { db } = require("./../config/database");
 
 
+exports.getTraceurCount = (req, res) => {
+    const q = `
+    SELECT COUNT(id_traceur) AS nbre_traceur
+        FROM traceur 
+    WHERE est_supprime = 0
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
 exports.getTraceur = (req, res) => {
     const q = `
             SELECT traceur.*, model_traceur.nom_model, etat_traceur.nom_etat_traceur, client.nom_client
