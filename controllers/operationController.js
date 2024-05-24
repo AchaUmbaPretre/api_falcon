@@ -3,7 +3,7 @@ const { db } = require("./../config/database");
 
 exports.getOperationCount = (req, res) => {
     const q = `
-    SELECT COUNT(id_operations) AS nbre_operations
+    SELECT COUNT(id_operations) AS nbre_operation
         FROM operations 
     WHERE est_supprime = 0
     `;
