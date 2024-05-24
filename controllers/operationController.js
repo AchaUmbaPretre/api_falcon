@@ -1,5 +1,19 @@
 const { db } = require("./../config/database");
 
+
+exports.getOperationCount = (req, res) => {
+    const q = `
+    SELECT COUNT(id_operations) AS nbre_operations
+        FROM operations 
+    WHERE est_supprime = 0
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
 exports.getOperation = (req, res) => {
     const q = `
     SELECT 

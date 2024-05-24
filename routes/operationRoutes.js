@@ -1,7 +1,8 @@
 const express = require("express");
-const { getOperation, postOperation, getSite, getTypeOperation } = require("../controllers/operationController");
+const { getOperation, postOperation, getSite, getTypeOperation, getOperationCount } = require("../controllers/operationController");
 const router = express.Router();
 
+router.get('/count', getOperationCount)
 router.get('/', getOperation)
 
 const multer = require('multer'); 
