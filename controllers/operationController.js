@@ -51,7 +51,7 @@ exports.getOperation = (req, res) => {
     });
 }
 
-/* exports.postOperation = async (req, res) => {
+exports.postOperationRempl = async (req, res) => {
 
     if (!req.files || Object.keys(req.files).length === 0) {
         return res.status(400).json({ error: "Aucun fichier téléchargé" });
@@ -66,7 +66,8 @@ exports.getOperation = (req, res) => {
     res.setHeader('Content-Type', 'multipart/form-data');
 
     try {
-        const update = 'UPDATE traceur SET id_client = ?, id_etat_traceur = 7 WHERE id_traceur = ?'
+        const updateAff = 'UPDATE affectations SET id_numero = ? WHERE id_numero = ?'
+        const updateTraceur = 'UPDATE traceur SET id_numero = NULL WHERE id_numero = ?'
         const q = 'INSERT INTO operations(`id_client`, `site`, `id_superviseur`,`id_technicien`, `date_operation`, `id_type_operations`,`id_traceur`,`probleme`,`observation`,`kilometre`, `tension`, `photo_plaque`,`photo_traceur`, `user_cr`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
         const values = [
             req.body.id_client,
@@ -105,7 +106,7 @@ exports.getOperation = (req, res) => {
         console.error(error);
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout d'opération." });
     }
-} */
+}
 
 /* exports.postOperation = async (req, res) => {
     try {
