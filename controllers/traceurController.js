@@ -69,12 +69,13 @@ exports.postTraceur = async (req, res) => {
                 return res.status(400).json({ message: `Le traceur avec le numéro de série ${req.body.numero_serie} existe déjà.` });
             }
 
-            const insertQuery = 'INSERT INTO traceur(`model`, `id_client`, `numero_serie`, `id_etat_traceur`) VALUES(?,?,?,?)';
+            const insertQuery = 'INSERT INTO traceur(`model`, `id_client`, `numero_serie`, `id_etat_traceur`, `id_vehicule`) VALUES(?,?,?,?,?)';
             const values = [
                 req.body.model,
                 req.body.id_client,
                 req.body.numero_serie,
-                req.body.id_etat_traceur || 1
+                req.body.id_etat_traceur || 1,
+                req.body.id_vehicule
             ];
 
             db.query(insertQuery, values, (err, results) => {
