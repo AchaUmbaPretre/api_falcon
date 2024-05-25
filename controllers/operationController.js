@@ -257,15 +257,34 @@ exports.postOperation = async (req, res) => {
 //Site
 exports.getSite = (req, res) => {
     const q = `
-    SELECT *
-        FROM site
-    `;
+            SELECT site.*, client.nom_client
+                FROM site
+            INNER JOIN client ON site.id_client = client.id_client
+            `;
      
     db.query(q, (error, data) => {
         if (error) res.status(500).send(error);
         return res.status(200).json(data);
     });
 }
+
+exports.postSite = async (req, res) => {
+    try {
+        const q = 'INSERT INTO site(`nom_site`, `id_client`) VALUES(?,?)';
+        const values = [
+            req.body.nom_site,
+            req.body.id_client
+        ];
+
+        await db.query(q, values);
+        return res.json('Processus réussi');
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du client." });
+    }
+}
+
+
 
 //Opération
 exports.getTypeOperation = (req, res) => {
