@@ -1,6 +1,5 @@
 const { db } = require("./../config/database");
 
-
 exports.getTraceurCount = (req, res) => {
     const q = `
     SELECT COUNT(id_traceur) AS nbre_traceur
@@ -15,21 +14,31 @@ exports.getTraceurCount = (req, res) => {
 }
 
 exports.getTraceur = (req, res) => {
+    const id_traceur = req.query.idTraceur;
+
     const q = `
-            SELECT traceur.*, model_traceur.nom_model, etat_traceur.nom_etat_traceur, client.nom_client
+    SELECT traceur.*, model_traceur.nom_model, etat_traceur.nom_etat_traceur, client.nom_client, vehicule.matricule, marque.nom_marque, numero.numero
         FROM traceur 
         INNER JOIN model_traceur ON traceur.model = model_traceur.id_model_traceur
         LEFT JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
         LEFT JOIN client ON traceur.id_client = client.id_client
-        WHERE traceur.est_supprime = 0
+        LEFT JOIN vehicule ON traceur.id_vehicule = vehicule.id_vehicule
+        LEFT JOIN marque ON vehicule.id_marque = marque.id_marque
+        LEFT JOIN affectations ON traceur.id_traceur = affectations.id_traceur
+        LEFT JOIN numero ON affectations.id_numero = numero.id_numero
+    WHERE traceur.est_supprime = 0 ${id_traceur ? 'AND traceur.id_traceur = ?' : ''}
         ORDER BY traceur.date_entree DESC;
     `;
      
-    db.query(q, (error, data) => {
-        if (error) res.status(500).send(error);
+    const queryParams = id_traceur ? [id_traceur] : [];
+
+    db.query(q, queryParams, (error, data) => {
+        if (error) {
+            return res.status(500).send(error);
+        }
         return res.status(200).json(data);
     });
-}
+};
 
 exports.getTraceurEtat = (req, res) => {
     const q = `
