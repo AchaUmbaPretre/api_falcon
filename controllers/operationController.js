@@ -66,7 +66,7 @@ exports.postOperationRempl = async (req, res) => {
     res.setHeader('Content-Type', 'multipart/form-data');
 
     try {
-        const updateAff = 'UPDATE affectations SET id_numero = ? WHERE id_numero = ?'
+        const updateAff = `UPDATE affectations SET id_numero = ${req.body.id_numero_nouveau} WHERE id_numero = ?`
         const updateTraceur = 'UPDATE traceur SET id_numero = NULL WHERE id_numero = ?'
         const q = 'INSERT INTO operations(`id_client`, `site`, `id_superviseur`,`id_technicien`, `date_operation`, `id_type_operations`,`id_traceur`,`probleme`,`observation`,`kilometre`, `tension`, `photo_plaque`,`photo_traceur`, `user_cr`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
         const values = [
