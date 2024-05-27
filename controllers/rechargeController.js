@@ -1,5 +1,43 @@
 const { db } = require("./../config/database");
 
+
+exports.getRechargeClientTotal = (req, res) => {
+    const q = `SELECT 
+    client.*, 
+    traceur.numero_serie, 
+    traceur.id_traceur, 
+    numero.numero,
+    (
+        SELECT COUNT(*)
+        FROM traceur AS t
+        INNER JOIN affectations AS a ON t.id_traceur = a.id_traceur
+        WHERE t.id_client = client.id_client
+        AND t.id_etat_traceur = 7
+    ) AS nbre_actif
+FROM 
+    client
+INNER JOIN 
+    traceur 
+ON 
+    client.id_client = traceur.id_client
+INNER JOIN 
+    affectations 
+ON 
+    traceur.id_traceur = affectations.id_traceur
+INNER JOIN 
+    numero 
+ON 
+    affectations.id_numero = numero.id_numero
+WHERE 
+    client.est_supprime = 0;
+`
+db.query(q, (error, data) => {
+    if (error) res.status(500).send(error);
+    return res.status(200).json(data);
+});
+
+}
+
 exports.getRecharge = (req, res) => {
     const query = 'SELECT * FROM recharge';
     
