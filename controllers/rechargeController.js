@@ -38,6 +38,31 @@ db.query(q, (error, data) => {
 
 }
 
+exports.getRechargeClientOne = (req, res) => {
+    const id_client = req.query.id_client;
+
+    const q = `SELECT 
+                client.id_client,client.nom_client, 
+                traceur.numero_serie, 
+                traceur.id_traceur, 
+                numero.numero
+                FROM 
+                    client
+                INNER JOIN traceur ON client.id_client = traceur.id_client
+                INNER JOIN affectations ON traceur.id_traceur = affectations.id_traceur
+                INNER JOIN numero ON affectations.id_numero = numero.id_numero
+                WHERE client.est_supprime = 0 AND traceur.id_etat_traceur = 7 AND client.id_client = ?`
+
+    db.query(q, [id_client], (err, results) => {
+    if (err) {
+        console.error('Erreur lors de la récupération des permissions:', err);
+        return res.status(500).json({ error: 'Erreur lors de la récupération des permissions' });
+    }
+    res.json(results);
+});
+
+}
+
 exports.getRecharge = (req, res) => {
     const query = 'SELECT * FROM recharge';
     
