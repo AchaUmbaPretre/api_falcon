@@ -9,6 +9,7 @@ const operationRoutes = require('./routes/operationRoutes');
 const affectationRoutes = require('./routes/affectationRoutes');
 const traceurRoutes = require('./routes/traceurRoutes');
 const vehiculeRoutes = require('./routes/vehiculeRoutes');
+const menuRoutes = require('./routes/menuRoutes');
 
 const app = express();
 
@@ -33,8 +34,8 @@ app.setMaxListeners(0);
 
 const port = process.env.PORT || 8070;
 
-
 app.use('/users', usersRoutes)
+app.use('/menu', menuRoutes)
 app.use('/client', clientRoutes)
 app.use('/operation', operationRoutes)
 app.use('/traceur', traceurRoutes)
