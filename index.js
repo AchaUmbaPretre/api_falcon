@@ -10,6 +10,7 @@ const affectationRoutes = require('./routes/affectationRoutes');
 const traceurRoutes = require('./routes/traceurRoutes');
 const vehiculeRoutes = require('./routes/vehiculeRoutes');
 const menuRoutes = require('./routes/menuRoutes');
+const rechargeRoutes = require('./routes/rechargeRoutes');
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.use('/operation', operationRoutes)
 app.use('/traceur', traceurRoutes)
 app.use('/affectation', affectationRoutes)
 app.use('/vehicule', vehiculeRoutes)
+app.use('/recharge', rechargeRoutes)
 
 
 app.listen(port, () => {
