@@ -82,3 +82,16 @@ exports.postClientContact = async (req, res) => {
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du contact." });
     }
 }
+
+
+exports.deleteClient = (req, res) => {
+    const id = req.params.id;
+  
+    const q = "DELETE client WHERE id_client = ?";
+  
+    db.query(q, [id], (err, data) => {
+      if (err) return res.send(err);
+      return res.json(data);
+    });
+  
+  }

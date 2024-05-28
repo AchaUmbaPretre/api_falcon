@@ -40,6 +40,56 @@ exports.getTraceur = (req, res) => {
     });
 };
 
+exports.getTraceurHistorique = (req, res) => {
+    const id_traceur = req.query.idTraceur;
+    
+    const q = `
+            SELECT 
+                traceur.*, 
+                model_traceur.nom_model, 
+                etat_traceur.nom_etat_traceur, 
+                client.nom_client, 
+                vehicule.matricule, 
+                marque.nom_marque, 
+                numero.numero, 
+                operations.id_client,
+                operations.date_operation,
+                operations.id_traceur
+            FROM 
+                traceur 
+            INNER JOIN 
+                model_traceur ON traceur.model = model_traceur.id_model_traceur
+            LEFT JOIN 
+                etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
+            LEFT JOIN 
+                client ON traceur.id_client = client.id_client
+            LEFT JOIN 
+                vehicule ON traceur.id_vehicule = vehicule.id_vehicule
+            LEFT JOIN 
+                marque ON vehicule.id_marque = marque.id_marque
+            LEFT JOIN 
+                affectations ON traceur.id_traceur = affectations.id_traceur
+            LEFT JOIN 
+                numero ON affectations.id_numero = numero.id_numero
+            LEFT JOIN 
+                operations ON traceur.id_traceur = operations.id_traceur
+            WHERE 
+                traceur.est_supprime = 0 
+                AND traceur.id_traceur = ${id_traceur}
+            ORDER BY 
+                operations.date_operation DESC;
+    `;
+     
+    const queryParams = id_traceur ? [id_traceur] : [];
+
+    db.query(q, queryParams, (error, data) => {
+        if (error) {
+            return res.status(500).send(error);
+        }
+        return res.status(200).json(data);
+    });
+};
+
 exports.getTraceurEtat = (req, res) => {
     const q = `
     SELECT *
@@ -78,11 +128,12 @@ exports.postTraceur = async (req, res) => {
                 return res.status(400).json({ message: `Le traceur avec le numéro de série ${req.body.numero_serie} existe déjà.` });
             }
 
-            const insertQuery = 'INSERT INTO traceur(`model`, `id_client`, `numero_serie`, `id_etat_traceur`, `id_vehicule`) VALUES(?,?,?,?,?)';
+            const insertQuery = 'INSERT INTO traceur(`model`, `id_client`, `numero_serie`,`code`, `id_etat_traceur`, `id_vehicule`) VALUES(?,?,?,?,?,?)';
             const values = [
                 req.body.model,
                 req.body.id_client,
                 req.body.numero_serie,
+                req.body.code,
                 req.body.id_etat_traceur || 1,
                 req.body.id_vehicule
             ];

@@ -17,51 +17,66 @@ exports.getAffectations = (req, res) => {
 
 exports.postAffectations = async (req, res) => {
     try {
-        const checkTraceurQuery = 'SELECT COUNT(*) AS count FROM affectations WHERE id_traceur = ?';
-        
-        db.query(checkTraceurQuery, [req.body.id_traceur], (err, traceurResults) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ error: "Une erreur s'est produite lors de la vérification du traceur." });
-            }
+        const affectations = req.body.affectations;
+        const errors = [];
 
-            if (traceurResults[0].count > 0) {
-                return res.status(400).json({ message: `Le traceur numéro ${req.body.id_traceur} est déjà associé à un numéro.` });
-            }
+        for (const affectation of affectations) {
+            const { id_numero, id_traceur } = affectation;
 
-            const checkNumeroQuery = 'SELECT COUNT(*) AS count FROM affectations WHERE id_numero = ?';
             
-            db.query(checkNumeroQuery, [req.body.id_numero], (err, numeroResults) => {
-                if (err) {
-                    console.error(err);
-                    return res.status(500).json({ error: "Une erreur s'est produite lors de la vérification du numéro." });
-                }
-
-                if (numeroResults[0].count > 0) {
-                    return res.status(400).json({ message: `Le numéro ${req.body.id_numero} est déjà associé à un traceur.` });
-                }
-
-                const insertQuery = 'INSERT INTO affectations(`id_numero`, `id_traceur`) VALUES(?,?)';
-                const values = [
-                    req.body.id_numero,
-                    req.body.id_traceur
-                ];
-
-                db.query(insertQuery, values, (err, results) => {
-                    if (err) {
-                        console.error(err);
-                        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout de l'affectation." });
-                    }
-
-                    return res.json('Processus réussi');
+            const checkTraceurQuery = 'SELECT COUNT(*) AS count FROM affectations WHERE id_traceur = ?';
+            const traceurResults = await new Promise((resolve, reject) => {
+                db.query(checkTraceurQuery, [id_traceur], (err, results) => {
+                    if (err) reject(err);
+                    resolve(results);
                 });
             });
-        });
+
+            if (traceurResults[0].count > 0) {
+                errors.push(`Le traceur numéro ${id_traceur} est déjà associé à un numéro.`);
+                continue;
+            }
+
+            
+            const checkNumeroQuery = 'SELECT COUNT(*) AS count FROM affectations WHERE id_numero = ?';
+            const numeroResults = await new Promise((resolve, reject) => {
+                db.query(checkNumeroQuery, [id_numero], (err, results) => {
+                    if (err) reject(err);
+                    resolve(results);
+                });
+            });
+
+            if (numeroResults[0].count > 0) {
+                errors.push(`Le numéro ${id_numero} est déjà associé à un traceur.`);
+                continue;
+            }
+
+            
+            const insertQuery = 'INSERT INTO affectations(`id_numero`, `id_traceur`) VALUES(?,?)';
+            try {
+                await new Promise((resolve, reject) => {
+                    db.query(insertQuery, [id_numero, id_traceur], (err, results) => {
+                        if (err) reject(err);
+                        resolve(results);
+                    });
+                });
+            } catch (err) {
+                console.error(err);
+                errors.push(`Une erreur s'est produite lors de l'ajout de l'affectation pour numéro ${id_numero} et traceur ${id_traceur}.`);
+            }
+        }
+
+        if (errors.length > 0) {
+            return res.status(400).json({ message: 'Certaines affectations ont échoué.', errors });
+        }
+
+        return res.json('Processus réussi');
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout de l'affectation." });
+        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout des affectations." });
     }
 };
+
 
 
 //Numero
@@ -79,7 +94,7 @@ exports.getNumero = (req, res) => {
 
 exports.postNumero = async (req, res) => {
     try {
-        const numeros = req.body.numeros; // S'attendre à ce que req.body.numeros soit un tableau de numéros
+        const numeros = req.body.numeros; 
 
         if (!Array.isArray(numeros) || numeros.length === 0) {
             return res.status(400).json({ message: "Veuillez fournir une liste de numéros." });
