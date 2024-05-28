@@ -42,42 +42,56 @@ exports.getTraceur = (req, res) => {
 
 exports.getTraceurHistorique = (req, res) => {
     const id_traceur = req.query.idTraceur;
-    
+
     const q = `
-            SELECT 
-                traceur.*, 
-                model_traceur.nom_model, 
-                etat_traceur.nom_etat_traceur, 
-                client.nom_client, 
-                vehicule.matricule, 
-                marque.nom_marque, 
-                numero.numero, 
-                operations.id_client,
-                operations.date_operation,
-                operations.id_traceur
-            FROM 
-                traceur 
-            INNER JOIN 
-                model_traceur ON traceur.model = model_traceur.id_model_traceur
-            LEFT JOIN 
-                etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
-            LEFT JOIN 
-                client ON traceur.id_client = client.id_client
-            LEFT JOIN 
-                vehicule ON traceur.id_vehicule = vehicule.id_vehicule
-            LEFT JOIN 
-                marque ON vehicule.id_marque = marque.id_marque
-            LEFT JOIN 
-                affectations ON traceur.id_traceur = affectations.id_traceur
-            LEFT JOIN 
-                numero ON affectations.id_numero = numero.id_numero
-            LEFT JOIN 
-                operations ON traceur.id_traceur = operations.id_traceur
-            WHERE 
-                traceur.est_supprime = 0 
-                AND traceur.id_traceur = ${id_traceur}
-            ORDER BY 
-                operations.date_operation DESC;
+    SELECT 
+    traceur.*, 
+    model_traceur.nom_model, 
+    etat_traceur.nom_etat_traceur, 
+    client.nom_client, 
+    vehicule.matricule, 
+    marque.nom_marque, 
+    numero.numero, 
+    operations.date_operation,
+    operations.photo_plaque,
+    operations.photo_traceur,
+    operations.probleme,
+    operations.observation,
+    operations.kilometre,
+    operations.tension,
+    type_operations.nom_type_operations,
+    superviseur.username AS superviseur,
+    technicien.username AS technicien
+    
+FROM 
+    traceur 
+INNER JOIN 
+    model_traceur ON traceur.model = model_traceur.id_model_traceur
+LEFT JOIN 
+    etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
+LEFT JOIN 
+    client ON traceur.id_client = client.id_client
+LEFT JOIN 
+    vehicule ON traceur.id_vehicule = vehicule.id_vehicule
+LEFT JOIN 
+    marque ON vehicule.id_marque = marque.id_marque
+LEFT JOIN 
+    affectations ON traceur.id_traceur = affectations.id_traceur
+LEFT JOIN 
+    numero ON affectations.id_numero = numero.id_numero
+LEFT JOIN 
+    operations ON traceur.id_traceur = operations.id_traceur
+INNER JOIN 
+    type_operations ON operations.id_type_operations = type_operations.id_type_operations
+LEFT JOIN 
+    users AS superviseur ON operations.id_superviseur = superviseur.id
+LEFT JOIN 
+    users AS technicien ON operations.id_technicien = technicien.id
+WHERE 
+    traceur.est_supprime = 0 
+    AND traceur.id_traceur = ?
+ORDER BY 
+    operations.date_operation DESC;
     `;
      
     const queryParams = id_traceur ? [id_traceur] : [];
