@@ -72,15 +72,14 @@ LEFT JOIN
 LEFT JOIN 
     client ON traceur.id_client = client.id_client
 LEFT JOIN 
-    vehicule ON traceur.id_vehicule = vehicule.id_vehicule
-LEFT JOIN 
-    marque ON vehicule.id_marque = marque.id_marque
-LEFT JOIN 
     affectations ON traceur.id_traceur = affectations.id_traceur
 LEFT JOIN 
     numero ON affectations.id_numero = numero.id_numero
 LEFT JOIN 
     operations ON traceur.id_traceur = operations.id_traceur
+LEFT JOIN vehicule ON operations.id_vehicule = vehicule.id_vehicule
+LEFT JOIN 
+    marque ON vehicule.id_marque = marque.id_marque
 INNER JOIN 
     type_operations ON operations.id_type_operations = type_operations.id_type_operations
 LEFT JOIN 
