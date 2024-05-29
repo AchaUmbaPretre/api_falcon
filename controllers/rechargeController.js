@@ -90,9 +90,10 @@ exports.getRecharge = (req, res) => {
     INNER JOIN affectations ON numero.id_numero = affectations.id_numero
     LEFT JOIN traceur ON affectations.id_traceur = traceur.id_traceur
     LEFT JOIN client ON traceur.id_client = client.id_client
-    INNER JOIN vehicule ON client.id_client = vehicule.id_client
+    LEFT JOIN vehicule ON traceur.id_vehicule = vehicule.id_vehicule
     INNER JOIN marque ON vehicule.id_marque = marque.id_marque
     INNER JOIN users ON recharge.user_cr = users.id
+    GROUP BY recharge.id_recharge
     `
     
     db.query(query, (err, results) => {
