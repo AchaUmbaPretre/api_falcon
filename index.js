@@ -11,6 +11,7 @@ const traceurRoutes = require('./routes/traceurRoutes');
 const vehiculeRoutes = require('./routes/vehiculeRoutes');
 const menuRoutes = require('./routes/menuRoutes');
 const rechargeRoutes = require('./routes/rechargeRoutes');
+const paiementRoutes = require('./routes/paiementRoutes');
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use('/traceur', traceurRoutes)
 app.use('/affectation', affectationRoutes)
 app.use('/vehicule', vehiculeRoutes)
 app.use('/recharge', rechargeRoutes)
+app.use('/paiement', paiementRoutes)
 
 
 app.listen(port, () => {

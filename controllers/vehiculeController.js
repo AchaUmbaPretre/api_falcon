@@ -80,3 +80,15 @@ exports.postMarque = async (req, res) => {
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du vehicule." });
     }
 }
+
+exports.deleteMarque = (req, res) => {
+    const id_marque = req.params.id;
+  
+    const q = "DELETE marque WHERE id_marque= ?";
+  
+    db.query(q, [id_marque], (err, data) => {
+      if (err) return res.send(err);
+      return res.json(data);
+    });
+  
+  }
