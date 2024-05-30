@@ -81,8 +81,8 @@ exports.getRecharge = (req, res) => {
     users.username,
     marque.nom_marque,
     CASE 
-        WHEN DATE_ADD(recharge.date_recharge, INTERVAL recharge.days DAY) <= CURDATE() THEN "Rechargez aujourd'hui"
-        ELSE "Pas de recharge"
+        WHEN DATE_ADD(recharge.date_recharge, INTERVAL recharge.days DAY) <= CURDATE() THEN "Inactif"
+        ELSE "Actif"
     END AS recharge_status,
     GREATEST(DATEDIFF(DATE_ADD(recharge.date_recharge, INTERVAL recharge.days DAY), CURDATE()), 0) AS days_restant
     FROM recharge

@@ -17,11 +17,9 @@ const app = express();
 
 dotenv.config();
 
-// Configuration de l'environnement de développement
 const environment = process.env.PORT || 'development';
 
 if (environment === 'development') {
-  // Activer l'affichage des erreurs détaillées dans les journaux
   const morgan = require('morgan');
   app.use(morgan('dev'));
 }
