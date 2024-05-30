@@ -67,6 +67,8 @@ exports.getRechargeClientOne = (req, res) => {
 }
 
 exports.getRecharge = (req, res) => {
+    const { start_date, end_date, searchValue } = req.query;
+
     const query = `
     SELECT 
     recharge.id_recharge,
@@ -93,6 +95,8 @@ exports.getRecharge = (req, res) => {
     LEFT JOIN vehicule ON traceur.id_vehicule = vehicule.id_vehicule
     INNER JOIN marque ON vehicule.id_marque = marque.id_marque
     INNER JOIN users ON recharge.user_cr = users.id
+    ${start_date ? `AND DATE(recharge.date_recharge) >= '${start_date}'` : ''}
+    ${end_date ? `AND DATE(recharge.date_recharge) <= '${end_date}'` : ''}
     GROUP BY recharge.id_recharge
     `
     

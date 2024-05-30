@@ -16,7 +16,8 @@ exports.getOperationCount = (req, res) => {
 
 exports.getOperation = (req, res) => {
 
-    const id_client = req.query.id_client;
+    const { start_date, end_date, searchValue, id_client } = req.query;
+    
     const q = `
     SELECT 
         operations.*, 
@@ -40,6 +41,8 @@ exports.getOperation = (req, res) => {
         INNER JOIN vehicule ON operations.id_vehicule = vehicule.id_vehicule
         INNER JOIN marque ON vehicule.id_marque = marque.id_marque
     WHERE operations.est_supprime = 0
+    ${start_date ? `AND DATE(operations.date_operation) >= '${start_date}'` : ''}
+    ${end_date ? `AND DATE(operations.date_operation) <= '${end_date}'` : ''}
     ${id_client ? `AND operations.id_operations = ?` : ''}
     ORDER BY operations.date_operation DESC;
     `;

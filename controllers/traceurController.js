@@ -14,7 +14,7 @@ exports.getTraceurCount = (req, res) => {
 }
 
 exports.getTraceur = (req, res) => {
-    const id_traceur = req.query.idTraceur;
+    const { start_date, end_date, searchValue, id_client, idTraceur } = req.query;
 
     const q = `
     SELECT traceur.*, model_traceur.nom_model, etat_traceur.nom_etat_traceur, client.nom_client, vehicule.matricule, marque.nom_marque, numero.numero
@@ -26,11 +26,13 @@ exports.getTraceur = (req, res) => {
         LEFT JOIN marque ON vehicule.id_marque = marque.id_marque
         LEFT JOIN affectations ON traceur.id_traceur = affectations.id_traceur
         LEFT JOIN numero ON affectations.id_numero = numero.id_numero
-    WHERE traceur.est_supprime = 0 ${id_traceur ? 'AND traceur.id_traceur = ?' : ''}
+    WHERE traceur.est_supprime = 0 ${idTraceur ? 'AND traceur.id_traceur = ?' : ''}
+    ${start_date ? `AND DATE(traceur.date_entree) >= '${start_date}'` : ''}
+    ${end_date ? `AND DATE(traceur.date_entree) <= '${end_date}'` : ''}
         ORDER BY traceur.date_entree DESC;
     `;
      
-    const queryParams = id_traceur ? [id_traceur] : [];
+    const queryParams = idTraceur ? [idTraceur] : [];
 
     db.query(q, queryParams, (error, data) => {
         if (error) {
