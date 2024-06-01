@@ -1,10 +1,64 @@
 const { db } = require("./../config/database");
+const { validationResult } = require('express-validator');
+
+/* exports.getDepense = (req, res) => {
+    const q = `
+    SELECT depense.montant, depense.date_depense, depense.description, users.username,
+     categorie_depense.nom_categorie 
+     FROM depense
+        INNER JOIN users ON depense.id_users = users.id
+        INNER JOIN categorie_depense ON depense.id_categorie = categorie_depense.id_categorie_depense
+    WHERE depense.est_supprime = 0
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+} */
 
 exports.getDepense = (req, res) => {
     const q = `
-    SELECT *
-        FROM depense 
-    WHERE est_supprime = 0
+    SELECT 
+    depense.montant,
+    depense.montant_franc,
+    depense.date_depense,
+    depense.description,
+    users.username,
+    categorie_depense.nom_categorie,
+    CASE DAYOFWEEK(depense.date_depense)
+        WHEN 1 THEN 'dimanche'
+        WHEN 2 THEN 'lundi'
+        WHEN 3 THEN 'mardi'
+        WHEN 4 THEN 'mercredi'
+        WHEN 5 THEN 'jeudi'
+        WHEN 6 THEN 'vendredi'
+        WHEN 7 THEN 'samedi'
+    END AS jour,
+    ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2) AS montant_total_combine
+FROM depense
+INNER JOIN users ON depense.id_users = users.id
+INNER JOIN categorie_depense ON depense.id_categorie = categorie_depense.id_categorie_depense
+WHERE depense.est_supprime = 0
+GROUP BY 
+    depense.montant,
+    depense.montant_franc,
+    depense.date_depense,
+    depense.description,
+    users.username,
+    categorie_depense.nom_categorie,
+    DAYOFWEEK(depense.date_depense);
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getTypeDepense = (req, res) => {
+    const q = `
+    SELECT * FROM categorie_depense
     `;
      
     db.query(q, (error, data) => {
@@ -15,12 +69,19 @@ exports.getDepense = (req, res) => {
 
 
 exports.postDepense = async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     try {
-        const q = 'INSERT INTO depense(`id_users`, `categorie`, `montant`, `description`) VALUES(?,?,?,?)';
+        const q = 'INSERT INTO depense(`id_users`, `id_categorie`, `montant`,`montant_franc`, `description`) VALUES(?,?,?,?,?)';
         const values = [
             req.body.id_users,
-            req.body.categorie,
+            req.body.id_categorie,
             req.body.montant,
+            req.body.montant_franc,
             req.body.description
         ];
 
@@ -44,3 +105,41 @@ exports.deleteDepense = (req, res) => {
     });
   
   }
+
+
+exports.getPaiementMois = (req, res) => {
+  
+      const q = `SELECT MONTH(paiement.date_paiement) AS mois, SUM(paiement.montant) AS paiement_total
+      FROM paiement
+      GROUP BY mois`;
+    
+      db.query(q ,(error, data)=>{
+        if(error) res.status(500).send(error)
+    
+        return res.status(200).json(data);
+    })
+    }
+
+exports.getDepenseMois = (req, res) => {
+      
+          const q = `SELECT 
+          MONTH(depense.date_depense) AS mois, 
+          categorie_depense.nom_categorie, 
+          SUM(depense.montant) AS total_depense
+      FROM 
+          depense
+      INNER JOIN 
+          categorie_depense ON depense.id_categorie = categorie_depense.id_categorie_depense
+      WHERE 
+          depense.est_supprime = 0
+      GROUP BY 
+          mois, 
+          categorie_depense.nom_categorie;
+      `;
+        
+          db.query(q ,(error, data)=>{
+            if(error) res.status(500).send(error)
+        
+            return res.status(200).json(data);
+        })
+        }
