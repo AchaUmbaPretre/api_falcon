@@ -14,7 +14,7 @@ exports.getTraceurCount = (req, res) => {
 }
 
 exports.getTraceur = (req, res) => {
-    const { start_date, end_date, searchValue, id_client, idTraceur } = req.query;
+    const { start_date, end_date, searchValue, idTraceur } = req.query;
 
     const q = `
     SELECT traceur.*, model_traceur.nom_model, etat_traceur.nom_etat_traceur, client.nom_client, vehicule.matricule, marque.nom_marque, numero.numero
