@@ -14,17 +14,24 @@ exports.getClientCount = (req, res) => {
 }
 
 exports.getClients = (req, res) => {
+    const { page = 1, limit = 10 } = req.query; 
+    const offset = (page - 1) * limit;
+
     const q = `
     SELECT *
-        FROM client 
+    FROM client 
     WHERE est_supprime = 0
+    LIMIT ? OFFSET ?
     `;
-     
-    db.query(q, (error, data) => {
-        if (error) res.status(500).send(error);
+
+    db.query(q, [parseInt(limit), parseInt(offset)], (error, data) => {
+        if (error) {
+            return res.status(500).send(error);
+        }
         return res.status(200).json(data);
     });
-}
+};
+
 
 exports.getClientAll = (req, res) => {
     const id_client = req.query.id_client;
