@@ -2,9 +2,14 @@ const { db } = require("./../config/database");
 
 exports.getTraceurCount = (req, res) => {
     const q = `
-    SELECT COUNT(id_traceur) AS nbre_traceur
-        FROM traceur 
-    WHERE est_supprime = 0
+        SELECT COUNT(id_traceur) AS nbre_traceur,
+                (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 1) AS Nbre_neuf,
+                (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 2) AS Nbre_dementele,
+                (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 5) AS Nbre_defectueux,
+                (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 6) AS Nbre_suspendu,
+                (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 7) AS Nbre_actif
+            FROM traceur 
+        WHERE est_supprime = 0
     `;
      
     db.query(q, (error, data) => {
@@ -47,7 +52,7 @@ exports.getTraceurHistorique = (req, res) => {
 
     const q = `
     SELECT 
-    traceur.*, 
+    traceur.id_traceur, traceur.model, traceur.numero_serie,traceur.code, 
     model_traceur.nom_model, 
     etat_traceur.nom_etat_traceur, 
     client.nom_client, 
@@ -72,13 +77,13 @@ INNER JOIN
 LEFT JOIN 
     etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
 LEFT JOIN 
-    client ON traceur.id_client = client.id_client
+    operations ON traceur.id_traceur = operations.id_traceur
+LEFT JOIN 
+    client ON operations.id_client = client.id_client
 LEFT JOIN 
     affectations ON traceur.id_traceur = affectations.id_traceur
 LEFT JOIN 
     numero ON affectations.id_numero = numero.id_numero
-LEFT JOIN 
-    operations ON traceur.id_traceur = operations.id_traceur
 LEFT JOIN vehicule ON operations.id_vehicule = vehicule.id_vehicule
 LEFT JOIN 
     marque ON vehicule.id_marque = marque.id_marque
@@ -91,6 +96,7 @@ LEFT JOIN
 WHERE 
     traceur.est_supprime = 0 
     AND traceur.id_traceur = ?
+GROUP BY operations.id_operations
 ORDER BY 
     operations.date_operation DESC;
     `;

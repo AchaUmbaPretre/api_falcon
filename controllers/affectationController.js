@@ -1,19 +1,54 @@
 const { db } = require("./../config/database");
 
 exports.getAffectations = (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const { startDate, endDate, search } = req.query;
+
+    let whereClause = 'WHERE affectations.est_supprime = 0';
+    if (startDate && endDate) {
+        whereClause += ` AND affectations.date BETWEEN '${startDate}' AND '${endDate}'`;
+    }
+    if (search) {
+        whereClause += ` AND (numero.numero LIKE '%${search}%' OR traceur.model LIKE '%${search}%')`;
+    }
+
     const q = `
-    SELECT *, numero.numero, traceur.model
+        SELECT affectations.*, numero.numero, traceur.model, traceur.numero_serie
         FROM affectations 
         INNER JOIN numero ON affectations.id_numero = numero.id_numero
         INNER JOIN traceur ON affectations.id_traceur = traceur.id_traceur
-    WHERE affectations.est_supprime = 0
+        ${whereClause}
+        LIMIT ${limit} OFFSET ${offset}
     `;
-     
+    
+    const countQuery = `
+        SELECT COUNT(*) as total
+        FROM affectations 
+        INNER JOIN numero ON affectations.id_numero = numero.id_numero
+        INNER JOIN traceur ON affectations.id_traceur = traceur.id_traceur
+        ${whereClause}
+    `;
+
     db.query(q, (error, data) => {
-        if (error) res.status(500).send(error);
-        return res.status(200).json(data);
+        if (error) return res.status(500).send(error);
+
+        db.query(countQuery, (countError, countData) => {
+            if (countError) return res.status(500).send(countError);
+
+            const total = countData[0].total;
+            return res.status(200).json({
+                data,
+                currentPage: page,
+                pageSize: limit,
+                total
+            });
+        });
     });
-}
+};
+
 
 exports.postAffectations = async (req, res) => {
     try {
@@ -79,7 +114,21 @@ exports.postAffectations = async (req, res) => {
 
 
 
+
 //Numero
+
+exports.getNumeroCount = (req, res) => {
+    const q = `
+    SELECT COUNT(id_numero) AS nbre_numero
+        FROM numero
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
 exports.getNumero = (req, res) => {
     const q = `
     SELECT *
