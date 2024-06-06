@@ -123,7 +123,7 @@ exports.updateUser = async (req, res) => {
   const { password } = req.query;
 
   if (!id || !password) {
-      return res.status(400).json({ error: "ID and password are required" });
+      return res.status(400).json({ error: "L'identifiant et le mot de passe sont requis" });
   }
 
   try {
