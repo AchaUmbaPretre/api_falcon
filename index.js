@@ -9,6 +9,10 @@ const operationRoutes = require('./routes/operationRoutes');
 const affectationRoutes = require('./routes/affectationRoutes');
 const traceurRoutes = require('./routes/traceurRoutes');
 const vehiculeRoutes = require('./routes/vehiculeRoutes');
+const menuRoutes = require('./routes/menuRoutes');
+const rechargeRoutes = require('./routes/rechargeRoutes');
+const paiementRoutes = require('./routes/paiementRoutes');
+const depenseRoutes = require('./routes/depenseRoutes');
 
 const app = express();
 
@@ -21,11 +25,23 @@ if (environment === 'development') {
   app.use(morgan('dev'));
 }
 
-app.use(cors());
+const corsOptions = {
+  origin: '*', // Autorise toutes les origines, à personnaliser pour plus de sécurité
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+  allowedHeaders: 'Origin, X-Requested-With, Content-Type, Accept'
+};
+
+app.use(cors(corsOptions));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
+
+const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+const imageUrl = proxyUrl + 'https://apifalcon.loginsmart-cd.com/uploads/83fc25b5e1d6c680f9d80c2ce9f56bd3';
+
 
 app.setMaxListeners(0);
 
