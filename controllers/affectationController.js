@@ -136,8 +136,6 @@ exports.postAffectations = async (req, res) => {
 };
 
 
-
-
 //Numero
 
 exports.getNumeroCount = (req, res) => {

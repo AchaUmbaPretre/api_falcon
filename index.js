@@ -9,12 +9,6 @@ const operationRoutes = require('./routes/operationRoutes');
 const affectationRoutes = require('./routes/affectationRoutes');
 const traceurRoutes = require('./routes/traceurRoutes');
 const vehiculeRoutes = require('./routes/vehiculeRoutes');
-const menuRoutes = require('./routes/menuRoutes');
-const rechargeRoutes = require('./routes/rechargeRoutes');
-const paiementRoutes = require('./routes/paiementRoutes');
-const depenseRoutes = require('./routes/depenseRoutes');
-
-
 
 const app = express();
 
