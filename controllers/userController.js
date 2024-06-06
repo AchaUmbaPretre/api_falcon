@@ -113,7 +113,6 @@ exports.detailForgot = (req, res) => {
     if(error) {
       return res.status(500).json({ error: error.message });
     }
-    console.log(data)
     res.status(200).json(data);
   });
 }
@@ -122,8 +121,6 @@ exports.detailForgot = (req, res) => {
 exports.updateUser = async (req, res) => {
   const id = req.params.id
   const { password } = req.query;
-
-  console.log(id)
 
   if (!id || !password) {
       return res.status(400).json({ error: "ID and password are required" });

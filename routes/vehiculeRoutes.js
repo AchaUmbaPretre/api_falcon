@@ -8,7 +8,7 @@ router.get('/',getVehicule)
 router.post('/', postVehicule)
 
 //Marque
-router.get('/marque',verifyToken , getMarque)
+router.get('/marque', getMarque)
 router.post('/marque', postMarque)
 router.delete('/marque/:id', deleteMarque)
 
