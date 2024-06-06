@@ -1,6 +1,6 @@
 const { db } = require("./../config/database");
 
-exports.getAffectations = (req, res) => {
+/* exports.getAffectations = (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
@@ -47,8 +47,31 @@ exports.getAffectations = (req, res) => {
             });
         });
     });
-};
+}; */
 
+exports.getAffectations = (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const { startDate, endDate, search } = req.query;
+    const q = `
+        SELECT affectations.*, numero.numero, traceur.model, traceur.numero_serie
+        FROM affectations 
+        INNER JOIN numero ON affectations.id_numero = numero.id_numero
+        INNER JOIN traceur ON affectations.id_traceur = traceur.id_traceur
+    `;
+
+    db.query(q, (error, data) => {
+        console.log(error)
+        if (error) return res.status(500).send(error);
+         return res.status(200).json({
+                data,
+                currentPage: page,
+                pageSize: limit,
+            });
+    });
+};
 
 exports.postAffectations = async (req, res) => {
     try {

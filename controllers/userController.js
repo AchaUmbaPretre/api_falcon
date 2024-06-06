@@ -94,7 +94,7 @@ exports.logout = (req, res) => {
   res.status(200).json({ message: 'Utilisateur déconnecté avec succès' });
 };
 
-exports.getPersonnel = (req, res) => {
+exports.getPersonnel = async (req, res) => {
   const query = 'SELECT * FROM users';
 
   db.query(query, (error, data) => {
@@ -103,4 +103,46 @@ exports.getPersonnel = (req, res) => {
     }
     res.status(200).json(data);
   });
+};
+
+exports.detailForgot = (req, res) => {
+  const { email } = req.query;
+  const q = `SELECT users.username, users.id, users.email FROM users WHERE email = ?`
+
+  db.query(q,[email], (error, data) => {
+    if(error) {
+      return res.status(500).json({ error: error.message });
+    }
+    res.status(200).json(data);
+  });
+}
+
+
+exports.updateUser = async (req, res) => {
+  const id = req.params.id
+  const { password } = req.query;
+
+  if (!id || !password) {
+      return res.status(400).json({ error: "ID and password are required" });
+  }
+
+  try {
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      const q = `UPDATE users SET password = ? WHERE id = ?`;
+
+      db.query(q, [hashedPassword, id], (error, data) => {
+          if (error) {
+              return res.status(500).json({ error: error.message });
+          }
+          if (data.affectedRows === 0) {
+              return res.status(404).json({ error: "User not found" });
+          }
+          res.status(200).json({ message: "Password updated successfully" });
+      });
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
 };
