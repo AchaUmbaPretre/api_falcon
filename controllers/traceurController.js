@@ -2,7 +2,6 @@ const { db } = require("./../config/database");
 
 exports.getTraceurCount = (req, res) => {
     const q = `
-<<<<<<< HEAD
         SELECT COUNT(id_traceur) AS nbre_traceur,
                 (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 1) AS Nbre_neuf,
                 (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 2) AS Nbre_dementele,
@@ -11,11 +10,6 @@ exports.getTraceurCount = (req, res) => {
                 (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 7) AS Nbre_actif
             FROM traceur 
         WHERE est_supprime = 0
-=======
-    SELECT COUNT(id_traceur) AS nbre_traceur
-        FROM traceur 
-    WHERE est_supprime = 0
->>>>>>> fe54c32284228a93e6de674875d0a5be2fa9032c
     `;
      
     db.query(q, (error, data) => {
