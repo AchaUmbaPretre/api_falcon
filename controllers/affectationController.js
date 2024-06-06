@@ -52,9 +52,9 @@ const { db } = require("./../config/database");
 exports.getAffectations = (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
+/*     const offset = (page - 1) * limit;
 
-    const { startDate, endDate, search } = req.query;
+    const { startDate, endDate, search } = req.query; */
     const q = `
         SELECT affectations.*, numero.numero, traceur.model, traceur.numero_serie
         FROM affectations 
