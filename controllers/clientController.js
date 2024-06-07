@@ -70,6 +70,7 @@ exports.getClientAll = (req, res) => {
 
 
 exports.postClient = async (req, res) => {
+    
     try {
         const checkClientQuery = 'SELECT COUNT(*) AS count FROM client WHERE nom_client = ?';
         const insertClientQuery = 'INSERT INTO client(`nom_client`, `nom_principal`, `poste`, `telephone`, `adresse`, `email`) VALUES(?,?,?,?,?,?)';
