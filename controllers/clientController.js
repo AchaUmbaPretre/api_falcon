@@ -48,7 +48,7 @@ exports.getClientAll = (req, res) => {
     });
 }
 
-exports.postClient = async (req, res) => {
+/* exports.postClient = async (req, res) => {
     try {
         const q = 'INSERT INTO client(`nom_client`, `nom_principal`, `poste`, `telephone`, `adresse`, `email`) VALUES(?,?,?,?,?,?)';
         const values = [
@@ -66,8 +66,38 @@ exports.postClient = async (req, res) => {
         console.error(error);
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du client." });
     }
-}
+} */
 
+
+exports.postClient = async (req, res) => {
+    try {
+        const checkClientQuery = 'SELECT COUNT(*) AS count FROM client WHERE nom_client = ?';
+        const insertClientQuery = 'INSERT INTO client(`nom_client`, `nom_principal`, `poste`, `telephone`, `adresse`, `email`) VALUES(?,?,?,?,?,?)';
+
+        const { nom_client, nom_principal, poste, telephone, adresse, email } = req.body;
+
+        const clientCheckResult = await new Promise((resolve, reject) => {
+            db.query(checkClientQuery, [nom_client], (error, results) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(results);
+                }
+            });
+        });
+
+        const count = clientCheckResult[0].count;
+        if (count > 0) {
+            return res.status(400).json({ error: 'Le client existe déjà avec ce nom.' });
+        }
+
+        await db.query(insertClientQuery, [nom_client, nom_principal, poste, telephone, adresse, email]);
+        return res.json('Processus réussi');
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du client." });
+    }
+};
 
 exports.postClientContact = async (req, res) => {
 
