@@ -26,8 +26,6 @@ const userService = {
         const existingUserQuery = 'SELECT * FROM users WHERE email = ?';
         const values = [userData.email];
         const existingUser = await db.query(existingUserQuery, values);
-
-        console.log(existingUser)
       
         if (existingUser.length > 0) {
           throw new Error("L'utilisateur existe déjà");

@@ -5,6 +5,22 @@ const util = require('util');
 // Promisify the query function
 const query = util.promisify(db.query).bind(db);
 
+exports.menusAll = (req, res) => {
+    const query = `SELECT menus.id AS menu_id, menus.title AS menu_title, menus.url AS menu_url, menus.icon AS menu_icon, 
+    submenus.id AS submenu_id, submenus.title AS submenu_title, submenus.url AS submenu_url, submenus.icon AS submenu_icon
+FROM menus 
+INNER JOIN submenus ON menus.id = submenus.menu_id
+`;
+    
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Erreur lors de la récupération des permissions:', err);
+            return res.status(500).json({ error: 'Erreur lors de la récupération des permissions' });
+        }
+        res.json(results);
+    });
+};
+
 exports.getMenu = async (req, res) => {
     const userId = req.query.userId;
 
