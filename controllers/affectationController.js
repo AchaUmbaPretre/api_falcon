@@ -49,6 +49,20 @@ const { db } = require("./../config/database");
     });
 }; */
 
+exports.getAffectationCount = (req, res) => {
+    
+    let q = `
+    SELECT COUNT(affectations.id_affectation) AS nbre_affectation
+    FROM affectations
+    WHERE est_supprime = 0
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
 exports.getAffectations = (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -63,7 +77,6 @@ exports.getAffectations = (req, res) => {
     `;
 
     db.query(q, (error, data) => {
-        console.log(error)
         if (error) return res.status(500).send(error);
          return res.status(200).json({
                 data,
