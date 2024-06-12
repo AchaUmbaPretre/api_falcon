@@ -3,18 +3,29 @@ const util = require('util');
 
 
 exports.getTraceurCount = (req, res) => {
-    const q = `
-        SELECT COUNT(id_traceur) AS nbre_traceur,
-                (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 1) AS Nbre_neuf,
-                (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 2) AS Nbre_dementele,
-                (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 5) AS Nbre_defectueux,
-                (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 6) AS Nbre_suspendu,
-                (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 7) AS Nbre_actif
-            FROM traceur 
-        WHERE est_supprime = 0
+    const { searchValue } = req.query;
+
+    let q = `
+    SELECT COUNT(id_traceur) AS nbre_traceur,
+        (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 1) AS Nbre_neuf,
+        (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 2) AS Nbre_dementele,
+        (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 5) AS Nbre_defectueux,
+        (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 6) AS Nbre_suspendu,
+        (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 7) AS Nbre_actif
+    FROM traceur 
+    INNER JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
+    INNER JOIN client ON traceur.id_client = client.id_client
+    WHERE traceur.est_supprime = 0
     `;
+
+    const params = [];
+
+    if (searchValue) {
+        q += ` AND (client.nom_client LIKE ? OR etat_traceur.nom_etat_traceur LIKE ?)`;
+        params.push(`%${searchValue}%`, `%${searchValue}%`);
+    }
      
-    db.query(q, (error, data) => {
+    db.query(q, params, (error, data) => {
         if (error) res.status(500).send(error);
         return res.status(200).json(data);
     });
