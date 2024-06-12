@@ -6,18 +6,28 @@ const path = require('path');
 
 
 exports.getOperationCount = (req, res) => {
-    const q = `
-    SELECT COUNT(id_operations) AS nbre_operation,
-        (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 1) AS nbre_installation,
-        (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 2) AS nbre_transfert,
-        (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 3) AS nbre_dementelement,
-        (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 4) AS nbre_controle_technique,
-        (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 5) AS nbre_remplacement
-    FROM operations 
-    WHERE est_supprime = 0
+    const { searchValue } = req.query;
+
+    let q = `
+        SELECT COUNT(id_operations) AS nbre_operation,
+            (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 1) AS nbre_installation,
+            (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 2) AS nbre_transfert,
+            (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 3) AS nbre_dementelement,
+            (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 4) AS nbre_controle_technique,
+            (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 5) AS nbre_remplacement
+        FROM operations 
+        INNER JOIN client ON operations.id_client = client.id_client
+        INNER JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
+        WHERE operations.est_supprime = 0
     `;
-     
-    db.query(q, (error, data) => {
+    const params = [];
+
+    if (searchValue) {
+        q += ` AND (client.nom_client LIKE ? OR type_operations.nom_type_operations LIKE ?)`;
+        params.push(`%${searchValue}%`, `%${searchValue}%`);
+    }
+
+    db.query(q, params, (error, data) => {
         if (error) res.status(500).send(error);
         return res.status(200).json(data);
     });
