@@ -1,4 +1,6 @@
 const { db } = require("./../config/database");
+const util = require('util');
+
 
 exports.getTraceurCount = (req, res) => {
     const q = `
@@ -154,38 +156,30 @@ exports.getModelTraceur = (req, res) => {
 exports.postTraceur = async (req, res) => {
     try {
         const checkQuery = 'SELECT COUNT(*) AS count FROM traceur WHERE numero_serie = ?';
+        const insertQuery = 'INSERT INTO traceur(`model`, `id_client`, `numero_serie`,`code`, `id_etat_traceur`, `id_vehicule`) VALUES(?,?,?,?,?,?)';
         
-        db.query(checkQuery, [req.body.numero_serie], (err, results) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ error: "Une erreur s'est produite lors de la vérification du traceur." });
-            }
+        const queryAsync = util.promisify(db.query).bind(db);
 
-            if (results[0].count > 0) {
-                return res.status(400).json({ message: `Le traceur avec le numéro de série ${req.body.numero_serie} existe déjà.` });
-            }
+        const results = await queryAsync(checkQuery, [req.body.numero_serie]);
+        
+        if (results[0].count > 0) {
+            return res.status(400).json({ message: `Le traceur avec le numéro de série ${req.body.numero_serie} existe déjà.` });
+        }
+        const values = [
+            req.body.model,
+            req.body.id_client,
+            req.body.numero_serie,
+            req.body.code,
+            req.body.id_etat_traceur || 1,
+            req.body.id_vehicule
+        ];
 
-            const insertQuery = 'INSERT INTO traceur(`model`, `id_client`, `numero_serie`,`code`, `id_etat_traceur`, `id_vehicule`) VALUES(?,?,?,?,?,?)';
-            const values = [
-                req.body.model,
-                req.body.id_client,
-                req.body.numero_serie,
-                req.body.code,
-                req.body.id_etat_traceur || 1,
-                req.body.id_vehicule
-            ];
-
-            db.query(insertQuery, values, (err, results) => {
-                if (err) {
-                    console.error(err);
-                    return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du traceur." });
-                }
-
-                return res.json('Processus réussi');
-            });
-        });
+        await queryAsync(insertQuery, values);
+        
+        return res.json('Processus réussi');
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du traceur." });
     }
 };
+

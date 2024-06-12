@@ -1,21 +1,32 @@
 const { db } = require("./../config/database");
 
 exports.getVehiculeCount = (req, res) => {
-    const q = `
+    const { searchValue } = req.query;
+    console.log(searchValue)
+    let q = `
     SELECT COUNT(id_vehicule) AS nbre_vehicule
-        FROM vehicule 
-    WHERE est_supprime = 0
+    FROM vehicule 
+    INNER JOIN client ON vehicule.id_client = client.id_client
+    WHERE vehicule.est_supprime = 0
     `;
+
+    const params = [];
+
+    if (searchValue) {
+        q += ` AND (vehicule.matricule LIKE ? OR client.nom_client LIKE ?)`;
+        params.push(`%${searchValue}%`, `%${searchValue}%`);
+    }
      
-    db.query(q, (error, data) => {
+    db.query(q, params, (error, data) => {
         if (error) res.status(500).send(error);
         return res.status(200).json(data);
     });
 }
 
+
 exports.getVehicule = (req, res) => {
     const id_client = req.query.id_client;
-    const q = `
+    let q = `
         SELECT vehicule.*, marque.nom_marque, client.nom_client
         FROM vehicule
         INNER JOIN marque ON vehicule.id_marque = marque.id_marque
