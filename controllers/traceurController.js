@@ -14,7 +14,7 @@ exports.getTraceurCount = (req, res) => {
         (SELECT COUNT(id_traceur) FROM traceur WHERE traceur.id_etat_traceur = 7) AS Nbre_actif
     FROM traceur 
     INNER JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
-    INNER JOIN client ON traceur.id_client = client.id_client
+    LEFT JOIN client ON traceur.id_client = client.id_client
     WHERE traceur.est_supprime = 0
     `;
 
