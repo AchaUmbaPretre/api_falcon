@@ -91,33 +91,51 @@ exports.getVehicule = (req, res) => {
 
 exports.postVehicule = async (req, res) => {
     try {
-        const checkMatriculeQuery = 'SELECT COUNT(*) AS count FROM vehicule WHERE matricule = ?';
-        const insertVehiculeQuery = 'INSERT INTO vehicule(`id_marque`, `matricule`,`id_client`, `code`) VALUES(?,?,?,?)';
+        const vehicles = req.body.vehicles;
 
-        const { matricule, id_marque, id_client, code } = req.body;
-
-        const matriculeCheckResult = await new Promise((resolve, reject) => {
-            db.query(checkMatriculeQuery, [matricule], (error, results) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(results);
-                }
-            });
-        });
-
-        const count = matriculeCheckResult[0].count;
-        if (count > 0) {
-            return res.status(400).json({ error: 'Le matricule existe déjà.' });
+        if (!vehicles || !Array.isArray(vehicles)) {
+            return res.status(400).json({ error: 'Les données des véhicules sont invalides ou manquantes.' });
         }
 
-        await db.query(insertVehiculeQuery, [id_marque, matricule, id_client, code]);
+        const checkMatriculeQuery = 'SELECT COUNT(*) AS count FROM vehicule WHERE matricule = ?';
+        const insertVehiculeQuery = 'INSERT INTO vehicule(`id_marque`, `matricule`, `id_client`, `code`) VALUES(?, ?, ?, ?)';
+
+        for (const vehicle of vehicles) {
+            const { matricule, id_marque, id_client, code } = vehicle;
+
+            const matriculeCheckResult = await new Promise((resolve, reject) => {
+                db.query(checkMatriculeQuery, [matricule], (error, results) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(results);
+                    }
+                });
+            });
+
+            const count = matriculeCheckResult[0].count;
+            if (count > 0) {
+                return res.status(400).json({ error: `Le matricule ${matricule} existe déjà.` });
+            }
+            
+            await new Promise((resolve, reject) => {
+                db.query(insertVehiculeQuery, [id_marque, matricule, id_client, code], (error, results) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(results);
+                    }
+                });
+            });
+        }
+
         return res.json('Processus réussi');
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du véhicule." });
+        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout des véhicules." });
     }
 };
+
 
 
 exports.getMarque = (req, res) => {
