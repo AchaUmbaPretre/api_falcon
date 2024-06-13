@@ -8,6 +8,7 @@ const db = mysql.createPool({
     database: 'falcon'
 });
 
+
 // Gestion des erreurs de connexion
 db.getConnection((err, connection) => {
     if (err) {

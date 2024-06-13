@@ -68,7 +68,7 @@ exports.getTypeDepense = (req, res) => {
 }
 
 
-exports.postDepense = async (req, res) => {
+/* exports.postDepense = async (req, res) => {
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -90,6 +90,29 @@ exports.postDepense = async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du client." });
+    }
+}
+ */
+
+exports.postDepense = async (req, res) => {
+    try {
+        const { id_users, id_categorie, montant, montant_franc, description } = req.body;
+
+        // Assurez-vous que montant et montant_franc sont des nombres
+        const parsedMontant = parseFloat(montant);
+        const parsedMontantFranc = parseFloat(montant_franc);
+
+
+        const q = 'INSERT INTO depense(`id_users`, `id_categorie`, `montant`, `montant_franc`, `description`) VALUES (?, ?, ?, ?, ?)';
+        const values = [id_users, id_categorie, parsedMontant, parsedMontantFranc, description];
+
+        // Exécution de la requête SQL
+        await db.query(q, values);
+
+        return res.json('Processus réussi');
+    } catch (error) {
+        console.error("Erreur lors de l'ajout de la dépense :", error);
+        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout de la dépense." });
     }
 }
 
@@ -122,10 +145,10 @@ exports.getPaiementMois = (req, res) => {
 
 exports.getDepenseMois = (req, res) => {
       
-          const q = `SELECT 
+    const q = `SELECT 
           MONTH(depense.date_depense) AS mois, 
           categorie_depense.nom_categorie, 
-          SUM(depense.montant) AS total_depense
+          ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2) AS total_depense
       FROM 
           depense
       INNER JOIN 
@@ -133,8 +156,9 @@ exports.getDepenseMois = (req, res) => {
       WHERE 
           depense.est_supprime = 0
       GROUP BY 
-          mois, 
+          MONTH(depense.date_depense), 
           categorie_depense.nom_categorie;
+      
       `;
         
           db.query(q ,(error, data)=>{

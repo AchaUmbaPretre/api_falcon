@@ -4,7 +4,7 @@ const { db } = require("./../config/database");
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
-
+ 
     const { startDate, endDate, search } = req.query;
 
     let whereClause = 'WHERE affectations.est_supprime = 0';
@@ -74,6 +74,7 @@ exports.getAffectations = (req, res) => {
         FROM affectations 
         INNER JOIN numero ON affectations.id_numero = numero.id_numero
         INNER JOIN traceur ON affectations.id_traceur = traceur.id_traceur
+        ORDER BY affectations.created_at DESC
     `;
 
     db.query(q, (error, data) => {
