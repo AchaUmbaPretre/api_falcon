@@ -32,6 +32,7 @@ exports.getVehicule = (req, res) => {
         INNER JOIN marque ON vehicule.id_marque = marque.id_marque
         INNER JOIN client ON client.id_client = vehicule.id_client
         ${id_client ? `WHERE client.id_client = ?` : ''}
+        ORDER BY vehicule.created_at DESC
     `;
 
     const params = id_client ? [id_client] : [];
@@ -117,7 +118,7 @@ exports.postVehicule = async (req, res) => {
             if (count > 0) {
                 return res.status(400).json({ error: `Le matricule ${matricule} existe déjà.` });
             }
-            
+
             await new Promise((resolve, reject) => {
                 db.query(insertVehiculeQuery, [id_marque, matricule, id_client, code], (error, results) => {
                     if (error) {

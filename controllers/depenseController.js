@@ -143,6 +143,64 @@ exports.getPaiementMois = (req, res) => {
     })
     }
 
+exports.getDepenseAllMois = (req, res) => {
+        
+        const mainQuery = `
+            SELECT 
+                DATE_FORMAT(depense.date_depense, '%W') AS jour_semaine,
+                DAY(depense.date_depense) AS jour,
+                categorie_depense.nom_categorie, 
+                depense.montant AS montant_dollars,
+                depense.montant_franc AS montant_franc,
+                ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2) AS total_depense,
+                depense.date_depense AS date_depense
+            FROM 
+                depense
+            INNER JOIN 
+                categorie_depense ON depense.id_categorie = categorie_depense.id_categorie_depense
+            WHERE 
+                depense.est_supprime = 0
+            GROUP BY 
+            DATE(depense.date_depense);
+        `;
+        
+        db.query(mainQuery, (error, data) => {
+            if (error) {
+                console.error("Erreur lors de l'exécution de la requête :", error);
+                return res.status(500).json({ error: 'Erreur lors de la récupération des données' });
+            }
+            
+            
+            const formattedData = data.map(row => ({
+                jour_semaine: convertDayToFrench(row.jour_semaine), // Convertir le jour de la semaine en français
+                jour: row.jour,
+                nom_categorie: row.nom_categorie,
+                total_depense: row.total_depense,
+                date_depense : row.date_depense,
+                montant_dollars : row.montant_dollars,
+                montant_franc : row.montant_franc
+            }));
+    
+            return res.status(200).json(formattedData);
+        });
+    }
+    
+    function convertDayToFrench(dayName) {
+        const frenchDays = {
+            Monday: 'Lundi',
+            Tuesday: 'Mardi',
+            Wednesday: 'Mercredi',
+            Thursday: 'Jeudi',
+            Friday: 'Vendredi',
+            Saturday: 'Samedi',
+            Sunday: 'Dimanche'
+        };
+    
+        return frenchDays[dayName] || dayName;
+    }
+    
+    
+
 exports.getDepenseMois = (req, res) => {
       
     const q = `SELECT 
