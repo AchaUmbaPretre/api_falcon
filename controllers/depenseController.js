@@ -18,43 +18,51 @@ const { validationResult } = require('express-validator');
 } */
 
 exports.getDepense = (req, res) => {
+    const { date } = req.query;
     const q = `
     SELECT 
-    depense.montant,
-    depense.montant_franc,
-    depense.date_depense,
-    depense.description,
-    users.username,
-    categorie_depense.nom_categorie,
-    CASE DAYOFWEEK(depense.date_depense)
-        WHEN 1 THEN 'dimanche'
-        WHEN 2 THEN 'lundi'
-        WHEN 3 THEN 'mardi'
-        WHEN 4 THEN 'mercredi'
-        WHEN 5 THEN 'jeudi'
-        WHEN 6 THEN 'vendredi'
-        WHEN 7 THEN 'samedi'
-    END AS jour,
-    ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2) AS montant_total_combine
-FROM depense
-INNER JOIN users ON depense.id_users = users.id
-INNER JOIN categorie_depense ON depense.id_categorie = categorie_depense.id_categorie_depense
-WHERE depense.est_supprime = 0
-GROUP BY 
-    depense.montant,
-    depense.montant_franc,
-    depense.date_depense,
-    depense.description,
-    users.username,
-    categorie_depense.nom_categorie,
-    DAYOFWEEK(depense.date_depense);
+        depense.montant,
+        depense.montant_franc,
+        DATE_FORMAT(CONVERT_TZ(depense.date_depense, '+00:00', @@session.time_zone), '%Y-%m-%d') AS date_depense,
+        depense.description,
+        users.username,
+        categorie_depense.nom_categorie,
+        CASE DAYOFWEEK(depense.date_depense)
+            WHEN 1 THEN 'dimanche'
+            WHEN 2 THEN 'lundi'
+            WHEN 3 THEN 'mardi'
+            WHEN 4 THEN 'mercredi'
+            WHEN 5 THEN 'jeudi'
+            WHEN 6 THEN 'vendredi'
+            WHEN 7 THEN 'samedi'
+        END AS jour,
+        ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2) AS montant_total_combine
+    FROM depense
+    INNER JOIN users ON depense.id_users = users.id
+    INNER JOIN categorie_depense ON depense.id_categorie = categorie_depense.id_categorie_depense
+    WHERE depense.est_supprime = 0 
+    ${date ? `AND DATE(depense.date_depense) = DATE(STR_TO_DATE(?, '%Y-%m-%dT%H:%i:%s.%fZ'))` : ''}
+    GROUP BY 
+        depense.montant,
+        depense.montant_franc,
+        depense.date_depense,
+        depense.description,
+        users.username,
+        categorie_depense.nom_categorie,
+        DAYOFWEEK(depense.date_depense);
     `;
-     
-    db.query(q, (error, data) => {
-        if (error) res.status(500).send(error);
+
+    const params = date ? [date] : [];
+
+    db.query(q, params, (error, data) => {
+        if (error) {
+            return res.status(500).send(error);
+        }
         return res.status(200).json(data);
     });
-}
+};
+
+
 
 exports.getTypeDepense = (req, res) => {
     const q = `
