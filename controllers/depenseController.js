@@ -224,7 +224,6 @@ exports.getDepenseMois = (req, res) => {
       GROUP BY 
           MONTH(depense.date_depense), 
           categorie_depense.nom_categorie;
-      
       `;
         
           db.query(q ,(error, data)=>{
