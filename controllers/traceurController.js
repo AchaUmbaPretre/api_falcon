@@ -35,9 +35,8 @@ exports.getTraceur = (req, res) => {
     const { start_date, end_date, searchValue, idTraceur } = req.query;
 
     const q = `
-    SELECT traceur.*, model_traceur.nom_model, etat_traceur.nom_etat_traceur, client.nom_client, vehicule.matricule, marque.nom_marque, numero.numero
+    SELECT traceur.*, etat_traceur.nom_etat_traceur, client.nom_client, vehicule.matricule, marque.nom_marque, numero.numero
         FROM traceur 
-        INNER JOIN model_traceur ON traceur.model = model_traceur.id_model_traceur
         LEFT JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
         LEFT JOIN client ON traceur.id_client = client.id_client
         LEFT JOIN vehicule ON traceur.id_vehicule = vehicule.id_vehicule
@@ -184,7 +183,7 @@ exports.postTraceur = async (req, res) => {
     const insertQueryAff = 'INSERT INTO affectations(`id_numero`, `id_traceur`) VALUES(?,?)';
     const insertQueryNumero = 'INSERT INTO numero(`numero`) VALUES (?)';
     const checkQueryTraceur = 'SELECT COUNT(*) AS count FROM traceur WHERE numero_serie = ?';
-    const insertQueryTraceur = 'INSERT INTO traceur(`model`, `id_client`, `numero_serie`, `code`, `id_etat_traceur`, `id_vehicule`) VALUES(?,?,?,?,?,?)';
+    const insertQueryTraceur = 'INSERT INTO traceur(`model`, `id_client`, `numero_serie`, `traceur_id`, `code`, `id_etat_traceur`, `id_vehicule`) VALUES(?,?,?,?,?,?,?)';
     const checkQueryNumero = 'SELECT id_numero FROM numero WHERE numero = ?';
     const checkQueryAff = 'SELECT COUNT(*) AS count FROM affectations WHERE id_numero = ? AND id_traceur = ?';
 
@@ -198,6 +197,7 @@ exports.postTraceur = async (req, res) => {
             req.body.model,
             req.body.id_client,
             req.body.numero_serie,
+            req.body.traceur_id,
             req.body.code,
             req.body.id_etat_traceur || 1,
             req.body.id_vehicule
