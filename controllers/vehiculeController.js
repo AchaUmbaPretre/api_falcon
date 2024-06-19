@@ -99,10 +99,10 @@ exports.postVehicule = async (req, res) => {
         }
 
         const checkMatriculeQuery = 'SELECT COUNT(*) AS count FROM vehicule WHERE matricule = ?';
-        const insertVehiculeQuery = 'INSERT INTO vehicule(`id_marque`, `matricule`, `id_client`, `code`) VALUES(?, ?, ?, ?)';
+        const insertVehiculeQuery = 'INSERT INTO vehicule(`id_marque`, `id_modele`, `matricule`, `id_client`, `code`) VALUES(?, ?, ?, ?, ?)';
 
         for (const vehicle of vehicles) {
-            const { matricule, id_marque, id_client, code } = vehicle;
+            const { matricule, id_marque,id_modele, id_client, code } = vehicle;
 
             const matriculeCheckResult = await new Promise((resolve, reject) => {
                 db.query(checkMatriculeQuery, [matricule], (error, results) => {
@@ -120,7 +120,7 @@ exports.postVehicule = async (req, res) => {
             }
 
             await new Promise((resolve, reject) => {
-                db.query(insertVehiculeQuery, [id_marque, matricule, id_client, code], (error, results) => {
+                db.query(insertVehiculeQuery, [id_marque, id_modele, matricule, id_client, code], (error, results) => {
                     if (error) {
                         reject(error);
                     } else {
@@ -185,7 +185,7 @@ exports.getModeleOne = (req, res) => {
     const {id_marque} = req.query;
 
     let q = `
-    SELECT modeles.modele
+    SELECT modeles.modele, id_modele
         FROM modeles
     WHERE modeles.id_marque = ?
     `;
