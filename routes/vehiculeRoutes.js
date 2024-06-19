@@ -1,5 +1,5 @@
 const express = require("express");
-const { getVehicule, postVehicule, getMarque, postMarque, getVehiculeCount, deleteMarque } = require("../controllers/vehiculeController");
+const { getVehicule, postVehicule, getMarque, postMarque, getVehiculeCount, deleteMarque, getModeleOne } = require("../controllers/vehiculeController");
 const verifyToken = require("../midllewares/verifyToken");
 const router = express.Router();
 
@@ -11,5 +11,9 @@ router.post('/', postVehicule)
 router.get('/marque', getMarque)
 router.post('/marque', postMarque)
 router.delete('/marque/:id', deleteMarque)
+
+
+//Modele
+router.get('/modele', getModeleOne)
 
 module.exports = router;

@@ -178,3 +178,23 @@ exports.deleteMarque = (req, res) => {
     });
   
   }
+
+
+//Modele
+exports.getModeleOne = (req, res) => {
+    const {id_marque} = req.query;
+
+    let q = `
+    SELECT modeles.modele
+        FROM modeles
+    WHERE modeles.id_marque = ?
+    `;
+
+    db.query(q, [id_marque], (error, data) => {
+        if (error) {
+            return res.status(500).send(error);
+        }
+        return res.status(200).json(data);
+    });
+
+}

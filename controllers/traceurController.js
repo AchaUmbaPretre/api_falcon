@@ -31,7 +31,7 @@ exports.getTraceurCount = (req, res) => {
     });
 }
 
-exports.getTraceur = (req, res) => {
+/* exports.getTraceur = (req, res) => {
     const { start_date, end_date, searchValue, idTraceur } = req.query;
 
     const q = `
@@ -57,7 +57,74 @@ exports.getTraceur = (req, res) => {
         }
         return res.status(200).json(data);
     });
+}; */
+
+exports.getTraceur = (req, res) => {
+    const { start_date, end_date, searchValue, idTraceur, page = 1, pageSize = 10 } = req.query;
+
+    const offset = (page - 1) * pageSize;
+
+    const countQuery = `
+    SELECT COUNT(*) as total
+    FROM traceur
+    LEFT JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
+    LEFT JOIN client ON traceur.id_client = client.id_client
+    LEFT JOIN vehicule ON traceur.id_vehicule = vehicule.id_vehicule
+    LEFT JOIN marque ON vehicule.id_marque = marque.id_marque
+    LEFT JOIN affectations ON traceur.id_traceur = affectations.id_traceur
+    LEFT JOIN numero ON affectations.id_numero = numero.id_numero
+    WHERE traceur.est_supprime = 0
+    ${idTraceur ? 'AND traceur.id_traceur = ?' : ''}
+    ${start_date ? `AND DATE(traceur.date_entree) >= ?` : ''}
+    ${end_date ? `AND DATE(traceur.date_entree) <= ?` : ''}
+    `;
+
+    const dataQuery = `
+    SELECT traceur.*, etat_traceur.nom_etat_traceur, client.nom_client, vehicule.matricule, marque.nom_marque, numero.numero
+        FROM traceur 
+        LEFT JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
+        LEFT JOIN client ON traceur.id_client = client.id_client
+        LEFT JOIN vehicule ON traceur.id_vehicule = vehicule.id_vehicule
+        LEFT JOIN marque ON vehicule.id_marque = marque.id_marque
+        LEFT JOIN affectations ON traceur.id_traceur = affectations.id_traceur
+        LEFT JOIN numero ON affectations.id_numero = numero.id_numero
+    WHERE traceur.est_supprime = 0
+    ${idTraceur ? 'AND traceur.id_traceur = ?' : ''}
+    ${start_date ? `AND DATE(traceur.date_entree) >= ?` : ''}
+    ${end_date ? `AND DATE(traceur.date_entree) <= ?` : ''}
+    ORDER BY traceur.date_entree DESC
+    LIMIT ? OFFSET ?;
+    `;
+
+    const queryParams = [
+        ...(idTraceur ? [idTraceur] : []),
+        ...(start_date ? [start_date] : []),
+        ...(end_date ? [end_date] : []),
+        parseInt(pageSize, 10),
+        parseInt(offset, 10)
+    ];
+
+    db.query(countQuery, queryParams.slice(0, queryParams.length - 2), (countError, countData) => {
+        if (countError) {
+            return res.status(500).send(countError);
+        }
+
+        db.query(dataQuery, queryParams, (dataError, data) => {
+            if (dataError) {
+                return res.status(500).send(dataError);
+            }
+
+            return res.status(200).json({
+                total: countData[0].total,
+                rows: data
+            });
+        });
+    });
 };
+
+
+
+
 
 exports.getTraceurHistorique = (req, res) => {
     const id_traceur = req.query.idTraceur;
