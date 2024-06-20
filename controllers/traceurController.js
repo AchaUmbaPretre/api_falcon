@@ -31,6 +31,76 @@ exports.getTraceurCount = (req, res) => {
     });
 }
 
+exports.getTraceurCountJour = (req, res) => {
+
+    let q = `
+    SELECT COUNT(id_traceur) AS nbre_traceur
+    FROM traceur 
+    WHERE traceur.est_supprime = 0 AND DATE(date_entree) = CURDATE()
+    `;
+
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getTraceurCountHier = (req, res) => {
+
+    let q = `
+    SELECT COUNT(id_traceur) AS nbre_traceur
+        FROM traceur 
+    WHERE traceur.est_supprime = 0 AND DATE(date_entree) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+    `;
+
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getTraceurCount7jours = (req, res) => {
+
+    let q = `
+    SELECT COUNT(id_traceur) AS nbre_traceur
+        FROM traceur 
+    WHERE traceur.est_supprime = 0 AND DATE(date_entree) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+    `;
+
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getTraceurCount30jours = (req, res) => {
+
+    let q = `
+    SELECT COUNT(id_traceur) AS nbre_traceur
+        FROM traceur 
+    WHERE traceur.est_supprime = 0 AND DATE(date_entree) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    `;
+
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getTraceurCount1an = (req, res) => {
+
+    let q = `
+    SELECT COUNT(id_traceur) AS nbre_traceur
+        FROM traceur 
+    WHERE traceur.est_supprime = 0 AND DATE(date_entree) >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+    `;
+
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
 /* exports.getTraceur = (req, res) => {
     const { start_date, end_date, searchValue, idTraceur } = req.query;
 
