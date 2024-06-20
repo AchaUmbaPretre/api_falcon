@@ -63,6 +63,97 @@ exports.getDepense = (req, res) => {
 };
 
 
+exports.getDepenseJour = (req, res) => {
+
+    const q = `SELECT 
+                CASE
+                    WHEN SUM(depense.montant) IS NOT NULL THEN ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2)
+                    ELSE ROUND(SUM(depense.montant_franc * 0.00036), 2)
+                END AS total_depense
+                FROM depense
+                  WHERE DATE(depense.date_depense) = CURDATE()
+                GROUP BY DATE(depense.date_depense)
+                `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+  }
+  
+exports.getDepenseHier = (req, res) => {
+  
+    const q = `SELECT 
+                CASE
+                    WHEN SUM(depense.montant) IS NOT NULL THEN ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2)
+                    ELSE ROUND(SUM(depense.montant_franc * 0.00036), 2)
+                END AS total_depense
+                FROM depense
+                  WHERE DATE(depense.date_depense) =  DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+                GROUP BY DATE(depense.date_depense)
+                `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+  }
+  
+exports.getDepense7jours = (req, res) => {
+  
+    const q = `SELECT 
+                CASE
+                    WHEN SUM(depense.montant) IS NOT NULL THEN ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2)
+                    ELSE ROUND(SUM(depense.montant_franc * 0.00036), 2)
+                END AS total_depense
+                FROM depense
+                  WHERE DATE(depense.date_depense) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                GROUP BY DATE(depense.date_depense)
+              `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+  }
+  
+exports.getDepense30jours = (req, res) => {
+  
+    const q = `SELECT 
+                CASE
+                    WHEN SUM(depense.montant) IS NOT NULL THEN ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2)
+                    ELSE ROUND(SUM(depense.montant_franc * 0.00036), 2)
+                END AS total_depense
+                FROM depense
+                  WHERE DATE(depense.date_depense) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                GROUP BY DATE(depense.date_depense)
+                `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+  }
+  
+exports.getDepense1an = (req, res) => {
+  
+    const q = `SELECT 
+              CASE
+                  WHEN SUM(depense.montant) IS NOT NULL THEN ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2)
+                  ELSE ROUND(SUM(depense.montant_franc * 0.00036), 2)
+              END AS total_depense
+              FROM depense
+                WHERE DATE(depense.date_depense) >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+              GROUP BY DATE(depense.date_depense)
+                `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+  }
+
+
 
 exports.getTypeDepense = (req, res) => {
     const q = `

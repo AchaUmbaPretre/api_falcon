@@ -2,7 +2,7 @@ const { db } = require("./../config/database");
 
 exports.getVehiculeCount = (req, res) => {
     const { searchValue } = req.query;
-    console.log(searchValue)
+
     let q = `
     SELECT COUNT(id_vehicule) AS nbre_vehicule
     FROM vehicule 
@@ -23,6 +23,75 @@ exports.getVehiculeCount = (req, res) => {
     });
 }
 
+exports.getVehiculeCountJour = (req, res) => {
+    
+    let q = `
+    SELECT COUNT(id_vehicule) AS nbre_vehicule
+        FROM vehicule 
+    WHERE vehicule.est_supprime = 0 AND DATE(created_at) = CURDATE()
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getVehiculeCountHier = (req, res) => {
+    
+    let q = `
+    SELECT COUNT(id_vehicule) AS nbre_vehicule
+        FROM vehicule 
+    WHERE vehicule.est_supprime = 0 AND DATE(created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getVehiculeCount7jours = (req, res) => {
+    
+    let q = `
+    SELECT COUNT(id_vehicule) AS nbre_vehicule
+        FROM vehicule 
+    WHERE vehicule.est_supprime = 0 AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getVehiculeCount30jours = (req, res) => {
+    
+    let q = `
+    SELECT COUNT(id_vehicule) AS nbre_vehicule
+        FROM vehicule 
+    WHERE vehicule.est_supprime = 0 AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getVehiculeCount1an = (req, res) => {
+    
+    let q = `
+    SELECT COUNT(id_vehicule) AS nbre_vehicule
+        FROM vehicule 
+    WHERE vehicule.est_supprime = 0 AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
 
 exports.getVehicule = (req, res) => {
     const id_client = req.query.id_client;
