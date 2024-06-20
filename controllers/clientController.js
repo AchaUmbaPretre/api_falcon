@@ -22,6 +22,71 @@ exports.getClientCount = (req, res) => {
     });
 }
 
+exports.getClientCountJour = (req, res) => {
+    
+    let q = `
+    SELECT COUNT(id_client) AS nbre_client
+    FROM client 
+    WHERE est_supprime = 0 AND DATE(created_at) = CURDATE()
+    `;
+    db.query(q,(error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getClientCountHier = (req, res) => {
+    
+    let q = `
+    SELECT COUNT(id_client) AS nbre_client
+    FROM client 
+    WHERE est_supprime = 0 AND DATE(created_at)= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+    `;
+    db.query(q,(error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getClientCount7jours = (req, res) => {
+    
+    let q = `
+    SELECT COUNT(id_client) AS nbre_client
+    FROM client 
+    WHERE est_supprime = 0 AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+    `;
+    db.query(q,(error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getClientCount30jours = (req, res) => {
+    
+    let q = `
+    SELECT COUNT(id_client) AS nbre_client
+    FROM client 
+    WHERE est_supprime = 0 AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    `;
+    db.query(q,(error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getClientCount1an = (req, res) => {
+    
+    let q = `
+    SELECT COUNT(id_client) AS nbre_client
+    FROM client 
+    WHERE est_supprime = 0 AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+    `;
+    db.query(q,(error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
 
 
 exports.getClients = (req, res) => {
