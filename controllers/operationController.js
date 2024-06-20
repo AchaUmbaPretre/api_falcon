@@ -33,6 +33,76 @@ exports.getOperationCount = (req, res) => {
     });
 }
 
+exports.getOperationCountJour = (req, res) => {
+
+    let q = `
+        SELECT COUNT(id_operations) AS nbre_operation
+        FROM operations 
+        WHERE operations.est_supprime = 0 AND DATE(date_operation) = CURDATE()
+    `;
+
+    db.query(q,(error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getOperationCountHier = (req, res) => {
+
+    let q = `
+        SELECT COUNT(id_operations) AS nbre_operation
+        FROM operations 
+        WHERE operations.est_supprime = 0 AND DATE(date_operation) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+    `;
+
+    db.query(q,(error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getOperationCount7jours = (req, res) => {
+
+    let q = `
+        SELECT COUNT(id_operations) AS nbre_operation
+        FROM operations 
+        WHERE operations.est_supprime = 0 AND DATE(date_operation) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+    `;
+
+    db.query(q,(error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getOperationCount30jours = (req, res) => {
+
+    let q = `
+        SELECT COUNT(id_operations) AS nbre_operation
+        FROM operations 
+        WHERE operations.est_supprime = 0 AND DATE(date_operation) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    `;
+
+    db.query(q,(error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getOperationCount1an = (req, res) => {
+
+    let q = `
+        SELECT COUNT(id_operations) AS nbre_operation
+        FROM operations 
+        WHERE operations.est_supprime = 0 AND DATE(date_operation) >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+    `;
+
+    db.query(q,(error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
 exports.getOperation = (req, res) => {
 
     const { start_date, end_date, searchValue, id_client } = req.query;
