@@ -1,4 +1,5 @@
 const { db } = require("./../config/database");
+const { validationResult } = require('express-validator');
 
 /* exports.getDepense = (req, res) => {
     const q = `
@@ -102,24 +103,27 @@ exports.getTypeDepense = (req, res) => {
  */
 
 exports.postDepense = async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     try {
-        const { id_users, id_categorie, montant, montant_franc, description } = req.body;
+        const q = 'INSERT INTO depense(`id_users`, `id_categorie`, `montant`,`montant_franc`, `description`) VALUES(?,?,?,?,?)';
+        const values = [
+            req.body.id_users,
+            req.body.id_categorie,
+            req.body.montant,
+            req.body.montant_franc,
+            req.body.description
+        ];
 
-        // Assurez-vous que montant et montant_franc sont des nombres
-        const parsedMontant = parseFloat(montant);
-        const parsedMontantFranc = parseFloat(montant_franc);
-
-
-        const q = 'INSERT INTO depense(`id_users`, `id_categorie`, `montant`, `montant_franc`, `description`) VALUES (?, ?, ?, ?, ?)';
-        const values = [id_users, id_categorie, parsedMontant, parsedMontantFranc, description];
-
-        // Exécution de la requête SQL
         await db.query(q, values);
-
         return res.json('Processus réussi');
     } catch (error) {
-        console.error("Erreur lors de l'ajout de la dépense :", error);
-        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout de la dépense." });
+        console.error(error);
+        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du client." });
     }
 }
 

@@ -27,10 +27,11 @@ exports.getVehiculeCount = (req, res) => {
 exports.getVehicule = (req, res) => {
     const id_client = req.query.id_client;
     let q = `
-        SELECT vehicule.*, marque.nom_marque, client.nom_client
+        SELECT vehicule.*, marque.nom_marque, client.nom_client,modeles.modele
         FROM vehicule
         INNER JOIN marque ON vehicule.id_marque = marque.id_marque
         INNER JOIN client ON client.id_client = vehicule.id_client
+        LEFT JOIN modeles ON vehicule.id_modele = modeles.id_modele
         ${id_client ? `WHERE client.id_client = ?` : ''}
         ORDER BY vehicule.created_at DESC
     `;
