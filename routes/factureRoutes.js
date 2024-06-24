@@ -1,5 +1,5 @@
 const express = require("express");
-const { getFacture, getTaxes, getRemises, postFacture } = require("../controllers/factureController");
+const { getFacture, getTaxes, getRemises, postFacture, postPaiementPaye } = require("../controllers/factureController");
 const router = express.Router();
 
 router.get('/', getFacture)
@@ -8,7 +8,6 @@ router.get('/taxes',getTaxes)
 router.get('/remises',getRemises)
 
 //Paiement
-router.post('/paiement',postFacture)
-
+router.post('/paiement',postPaiementPaye)
 
 module.exports = router;
