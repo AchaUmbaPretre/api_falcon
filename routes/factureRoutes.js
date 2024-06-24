@@ -7,4 +7,8 @@ router.post('/',postFacture)
 router.get('/taxes',getTaxes)
 router.get('/remises',getRemises)
 
+//Paiement
+router.post('/paiement',postFacture)
+
+
 module.exports = router;

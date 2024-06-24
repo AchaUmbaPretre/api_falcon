@@ -185,3 +185,32 @@ exports.getRemises = (req, res) => {
         return res.status(200).json(data);
     });
 }
+
+exports.postPaiementPaye = (req, res) => {
+    const { id_facture, montant, date_paiement } = req.body;
+    db.query('INSERT INTO paiements (id_facture, montant, date_paiement) VALUES (?, ?, ?)', [id_facture, montant, date_paiement], (err, result) => {
+        if (err) throw err;
+
+        db.query('SELECT SUM(montant) AS total_paye FROM paiements WHERE id_facture = ?', [id_facture], (err, results) => {
+            if (err) throw err;
+            const total_paye = results[0].total_paye;
+
+            db.query('SELECT total FROM factures WHERE id_facture = ?', [id_facture], (err, results) => {
+                if (err) throw err;
+                const total_facture = results[0].total;
+
+                let statut = 'non payé';
+                if (total_paye >= total_facture) {
+                    statut = 'payé';
+                } else if (total_paye > 0) {
+                    statut = 'partiellement payé';
+                }
+
+                db.query('UPDATE factures SET statut = ? WHERE id_facture = ?', [statut, id_facture], (err) => {
+                    if (err) throw err;
+                    res.send({ statut });
+                });
+            });
+        });
+    });
+}
