@@ -3,6 +3,9 @@ const nodemailer = require('nodemailer');
 const juice = require('juice');
 const ejs = require('ejs');
 const path = require('path');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 
 exports.getOperationCount = (req, res) => {
@@ -105,7 +108,7 @@ exports.getOperationCount1an = (req, res) => {
 
 exports.getOperation = (req, res) => {
 
-    const { start_date, end_date, searchValue, id_client } = req.query;
+    const { start_date, end_date, searchValue, id_operation } = req.query;
 
     const q = `
     SELECT 
@@ -114,9 +117,11 @@ exports.getOperation = (req, res) => {
         superviseur.username AS superviseur, 
         site.nom_site, 
         traceur.numero_serie, 
+        traceur.code,
         type_operations.nom_type_operations AS type_operations, 
         technicien.username AS technicien,
-        user_cr.username AS user_cr, numero.numero, vehicule.matricule, marque.nom_marque
+        user_cr.username AS user_cr, numero.numero, vehicule.matricule, marque.nom_marque,
+        DATE_FORMAT(CONVERT_TZ(operations.date_operation, '+00:00', @@session.time_zone), '%Y-%m-%d') AS date_operation
     FROM operations 
         INNER JOIN client ON operations.id_client = client.id_client
         INNER JOIN users AS superviseur ON operations.id_superviseur = superviseur.id
@@ -132,10 +137,10 @@ exports.getOperation = (req, res) => {
     WHERE operations.est_supprime = 0
     ${start_date ? `AND DATE(operations.date_operation) >= '${start_date}'` : ''}
     ${end_date ? `AND DATE(operations.date_operation) <= '${end_date}'` : ''}
-    ${id_client ? `AND operations.id_operations = ?` : ''}
-    ORDER BY operations.date_operation DESC;
+    ${id_operation ? `AND operations.id_operations = ?` : ''}
+    ORDER BY operations.created_at DESC;
     `;
-    const params = id_client ? [id_client] : [];
+    const params = id_operation ? [id_operation] : [];
 
     db.query(q, params, (error, data) => {
         if (error) res.status(500).send(error);
@@ -399,16 +404,39 @@ exports.postSignature = async (req, res) => {
             req.body.signature
         ];
 
-        await db.query(q, values);
-        return res.json('Processus réussi');
+        db.query(q, values, (error, results) => {
+            if (error) {
+                console.error(error);
+                return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout d'une signature." });
+            }
+
+            const signatureId = results.insertId;
+            
+            // Récupérez la signature insérée pour la renvoyer dans la réponse
+            db.query('SELECT signature FROM signatures WHERE id_signature = ?', [signatureId], (selectError, selectResults) => {
+                if (selectError) {
+                    console.error(selectError);
+                    return res.status(500).json({ error: "Erreur lors de la récupération de la signature." });
+                }
+                
+                if (selectResults.length === 0) {
+                    return res.status(404).json({ error: "Signature non trouvée." });
+                }
+                
+                const signatureData = selectResults[0].signature;
+                
+                // Renvoyez la signature Base64 dans la réponse
+                return res.json({ success: true, signature: signatureData });
+            });
+
+        });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout d'une signature." });
     }
-}
+};
 
-
-exports.envoieEmail = async (req, res) => {
+/* exports.envoieEmail = async (req, res) => {
     const { email, id_client } = req.body;
 
     const q = `
@@ -483,5 +511,165 @@ exports.envoieEmail = async (req, res) => {
         console.error('Erreur lors de la récupération des données:', error);
         res.status(500).json({ success: false, message: 'Une erreur s\'est produite lors de la récupération des données.' });
     }
-}
+} */
 
+exports.envoieEmail = async (req, res) => {
+    const { email, id_operations } = req.body;
+  
+    if (!Array.isArray(id_operations) || id_operations.length === 0) {
+      return res.status(400).json({ error: "id_operations doit être un tableau non vide." });
+    }
+  
+    const placeholders = id_operations.map(() => '?').join(',');
+    const q = `
+      SELECT 
+          operations.*, 
+          client.nom_client, 
+          superviseur.username AS superviseur, 
+          site.nom_site, 
+          traceur.numero_serie, 
+          traceur.code,
+          type_operations.nom_type_operations AS type_operations, 
+          technicien.username AS technicien,
+          user_cr.username AS user_cr, numero.numero, vehicule.matricule, marque.nom_marque,
+          DATE_FORMAT(CONVERT_TZ(operations.date_operation, '+00:00', @@session.time_zone), '%Y-%m-%d') AS date_operation,
+          operations.photo_plaque,
+          operations.photo_traceur
+      FROM operations 
+          INNER JOIN client ON operations.id_client = client.id_client
+          INNER JOIN users AS superviseur ON operations.id_superviseur = superviseur.id
+          INNER JOIN users AS technicien ON operations.id_technicien = technicien.id
+          INNER JOIN users AS user_cr ON operations.user_cr = user_cr.id
+          INNER JOIN site ON operations.site = site.id_site
+          INNER JOIN traceur ON operations.id_traceur = traceur.id_traceur
+          INNER JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
+          LEFT JOIN affectations ON traceur.id_traceur = affectations.id_traceur
+          LEFT JOIN numero ON affectations.id_numero = numero.id_numero
+          INNER JOIN vehicule ON operations.id_vehicule = vehicule.id_vehicule
+          INNER JOIN marque ON vehicule.id_marque = marque.id_marque
+      WHERE operations.est_supprime = 0
+        AND operations.id_operations IN (${placeholders})
+      ORDER BY operations.date_operation DESC;
+    `;
+  
+    db.query(q, id_operations, (error, results) => {
+      if (error) {
+        console.log(error);
+        res.status(500).json({ error: "Une erreur s'est produite lors de l'exécution de la requête SQL." });
+      } else {
+        if (results.length === 0) {
+          res.status(404).json({ message: "Aucune opération trouvée pour les identifiants donnés." });
+          return;
+        }
+  
+        const groupedByType = results.reduce((acc, result) => {
+          const type = result.type_operations || 'Autres';
+          if (!acc[type]) acc[type] = [];
+          acc[type].push(result);
+          return acc;
+        }, {});
+  
+        let tableHTML = `
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="border-bottom: 1px solid #cecece; width: 80%; margin: 10px 0;">
+              <h2 style="padding: 10px 0; margin: 0; font-size: 1rem; color: red; text-align: center; line-height: 25px;">
+                RAPPORT SYNTHETIQUE DES INSTALLATIONS ET CONTROLES TECHNIQUES DES TRACKERS EFFECTUEES
+                EN DATE DU ${new Date().toLocaleDateString()} SUR LES VEHICULE(S) ${results[0].nom_client.toUpperCase()}
+              </h2>
+            </div>
+          </div>
+        `;
+  
+        Object.entries(groupedByType).forEach(([type, details], index) => {
+          tableHTML += `
+            <div>
+              <h3 style="padding-top: 20px;">${index + 1}. ${type}</h3>
+              <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 16px; text-align: left;">
+                <thead>
+                  <tr>
+                    <th style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">Matricule</th>
+                    <th style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">Marque</th>
+                    <th style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">Tracker</th>
+                    <th style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">Observation</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+  
+          details.forEach(detail => {
+            tableHTML += `
+              <tr>
+                <td style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">${detail.matricule ?? 'N/A'}</td>
+                <td style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">${detail.nom_marque ?? 'N/A'}</td>
+                <td style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">${detail.code ?? 'N/A'}</td>
+                <td style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">${detail.observation ?? 'N/A'}</td>
+              </tr>
+            `;
+          });
+  
+          tableHTML += `
+                </tbody>
+              </table>
+              <div style="width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; padding: 10px 0; border-bottom: 1px solid #dddddd;">
+          `;
+  
+/*           details.forEach(detail => {
+            tableHTML += `
+              <div style="width: 100%; display: flex; flex-direction: column; gap: 10px; padding: 10px;">
+                <span>Matricule: </span>
+                <span>${detail.matricule ?? 'N/A'}</span>
+              </div>
+              <div style="width: 100%; display: flex; flex-direction: column; gap: 10px; padding: 10px;">
+                <span>Photo plaque : </span>
+                <img
+                  style="width: 200px; height: 200px;"
+                  src="${process.env.DOMAIN}${detail.photo_plaque}"
+                  alt="Photo plaque"
+                  onerror="this.onerror=null; this.src='/path/to/placeholder/image.png';"
+                />
+              </div>
+              <div style="width: 100%; display: flex; flex-direction: column; gap: 10px; padding: 10px;">
+                <span>Photo traceur : </span>
+                <img
+                  style="width: 200px; height: 200px;"
+                  src="${process.env.DOMAIN}${detail.photo_traceur}"
+                  alt="Photo traceur"
+                  onerror="this.onerror=null; this.src='/path/to/placeholder/image.png';"
+                />
+              </div>
+            `;
+          }); */
+  
+          tableHTML += `
+              </div>
+            </div>
+          `;
+        });
+  
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+              user: 'ndoeboutique01@gmail.com',
+              pass: 'c c h d b z j i s p w n u w g z',
+            },
+          });
+  
+        const mailOptions = {
+            from: 'achandambi@gmail.com',
+            to: 'achandambi@gmail.com',
+            subject: 'Vente',
+            html: tableHTML,
+        };
+  
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.log(error);
+            res.status(500).json({ error: "Une erreur s'est produite lors de l'envoi de l'e-mail." });
+          } else {
+            console.log('E-mail envoyé :', info.response);
+            res.status(200).json({ message: 'E-mail envoyé avec succès.' });
+          }
+        });
+      }
+    });
+  };

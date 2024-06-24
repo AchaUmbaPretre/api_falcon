@@ -1,5 +1,5 @@
 const express = require("express");
-const { getOperation, postOperation, getSite, getTypeOperation, getOperationCount, postSite, postSignature, getOperationCountJour, getOperationCountHier, getOperationCount7jours, getOperationCount30jours, getOperationCount1an } = require("../controllers/operationController");
+const { getOperation, postOperation, getSite, getTypeOperation, getOperationCount, postSite, postSignature, getOperationCountJour, getOperationCountHier, getOperationCount7jours, getOperationCount30jours, getOperationCount1an, envoieEmail } = require("../controllers/operationController");
 const router = express.Router();
 
 router.get('/count', getOperationCount)
@@ -26,6 +26,6 @@ router.get('/type_operation', getTypeOperation)
 //Signature
 router.post('/signature', postSignature)
 
-router.post('/send-operation-email', postSignature)
+router.post('/send-operation-email', envoieEmail)
 
 module.exports = router

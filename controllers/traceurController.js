@@ -101,33 +101,22 @@ exports.getTraceurCount1an = (req, res) => {
     });
 }
 
-/* exports.getTraceur = (req, res) => {
-    const { start_date, end_date, searchValue, idTraceur } = req.query;
+exports.getTraceurInstall = (req, res) => {
 
     const q = `
-    SELECT traceur.*, etat_traceur.nom_etat_traceur, client.nom_client, vehicule.matricule, marque.nom_marque, numero.numero
+    SELECT traceur.id_traceur, traceur.id_etat_traceur, traceur.code, etat_traceur.nom_etat_traceur
         FROM traceur 
-        LEFT JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
-        LEFT JOIN client ON traceur.id_client = client.id_client
-        LEFT JOIN vehicule ON traceur.id_vehicule = vehicule.id_vehicule
-        LEFT JOIN marque ON vehicule.id_marque = marque.id_marque
-        LEFT JOIN affectations ON traceur.id_traceur = affectations.id_traceur
-        LEFT JOIN numero ON affectations.id_numero = numero.id_numero
-    WHERE traceur.est_supprime = 0 ${idTraceur ? 'AND traceur.id_traceur = ?' : ''}
-    ${start_date ? `AND DATE(traceur.date_entree) >= '${start_date}'` : ''}
-    ${end_date ? `AND DATE(traceur.date_entree) <= '${end_date}'` : ''}
-        ORDER BY traceur.date_entree DESC;
+    LEFT JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
+    ORDER BY traceur.date_entree DESC;
     `;
-     
-    const queryParams = idTraceur ? [idTraceur] : [];
 
-    db.query(q, queryParams, (error, data) => {
+    db.query(q,(error, data) => {
         if (error) {
             return res.status(500).send(error);
         }
         return res.status(200).json(data);
     });
-}; */
+};
 
 exports.getTraceur = (req, res) => {
     const { start_date, end_date, searchValue, idTraceur, page = 1, pageSize = 10 } = req.query;
