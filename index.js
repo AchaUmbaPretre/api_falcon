@@ -13,6 +13,7 @@ const menuRoutes = require('./routes/menuRoutes');
 const rechargeRoutes = require('./routes/rechargeRoutes');
 const paiementRoutes = require('./routes/paiementRoutes');
 const depenseRoutes = require('./routes/depenseRoutes');
+const factureRoutes = require('./routes/factureRoutes')
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use('/vehicule', vehiculeRoutes)
 app.use('/recharge', rechargeRoutes)
 app.use('/paiement', paiementRoutes)
 app.use('/depense', depenseRoutes)
+app.use('/facture', factureRoutes)
 
 
 app.listen(port, () => {

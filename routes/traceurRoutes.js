@@ -1,8 +1,9 @@
 const express = require("express");
-const { getTraceur, postTraceur, getTraceurEtat, getModelTraceur, getTraceurCount, getTraceurHistorique, getTraceurCountJour, getTraceurCountHier, getTraceurCount7jours, getTraceurCount30jours, getTraceurCount1an, getTraceurInstall } = require("../controllers/traceurController");
+const { getTraceur, postTraceur, getTraceurEtat, getModelTraceur, getTraceurCount, getTraceurHistorique, getTraceurCountJour, getTraceurCountHier, getTraceurCount7jours, getTraceurCount30jours, getTraceurCount1an, getTraceurInstall, getTraceurCountClient } = require("../controllers/traceurController");
 const router = express.Router();
 
 router.get('/count', getTraceurCount)
+router.get('/countClient', getTraceurCountClient)
 router.get('/countJour', getTraceurCountJour)
 router.get('/countHier', getTraceurCountHier)
 router.get('/count7jours', getTraceurCount7jours)

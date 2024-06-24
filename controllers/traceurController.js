@@ -31,6 +31,22 @@ exports.getTraceurCount = (req, res) => {
     });
 }
 
+exports.getTraceurCountClient = (req, res) => {
+    const { id_client } = req.query;
+
+    let q = `
+    SELECT COUNT(id_traceur) AS nbre_traceur
+    FROM traceur 
+    WHERE traceur.est_supprime = 0 AND id_client = ?
+    `;
+
+    db.query(q,[id_client], (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+
 exports.getTraceurCountJour = (req, res) => {
 
     let q = `
