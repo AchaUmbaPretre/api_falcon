@@ -29,13 +29,18 @@ exports.getPaiement = (req, res) => {
 exports.postPaiement = async (req, res) => {
 
     try {
-        const q = 'INSERT INTO paiement(`id_client`, `montant`, `device`, `methode`) VALUES(?, ?, ?, ?)';
+        const q = 'INSERT INTO paiement(`id_client`, `montant`, `montant_tva`, `device`, `methode`, `user_paiement`, `ref`,`code_paiement`,`document`) VALUES(?, ?, ?, ?, ?,?,?,?,?)';
 
         const values = [
             req.body.id_client,
             req.body.montant,
+            req.body.montant_tva,
             req.body.device,
-            req.body.methode
+            req.body.methode,
+            req.body.user_paiement,
+            req.body.ref,
+            req.body.code_paiement,
+            req.body.document
         ];
 
         await db.query(q, values);
