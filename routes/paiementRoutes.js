@@ -4,7 +4,11 @@ const router = express.Router();
 
 router.get('/methode', getMethode)
 router.get('/', getPaiement)
-router.post('/', postPaiement)
+
+const multer = require('multer'); 
+const upload = multer({ dest: 'public/uploads/' });
+
+router.post('/',upload.single('document'), postPaiement)
 
 //Dette
 
