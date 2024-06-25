@@ -14,17 +14,35 @@ exports.getMethode = (req, res) => {
 
 exports.getPaiement = (req, res) => {
     const q = `
-            SELECT paiement.id_paiement,paiement.montant, paiement.montant_tva, paiement.date_paiement, paiement.ref, paiement.code_paiement, paiement.document, paiement.status, client.nom_client, methode_paiement.nom_methode, users.username FROM paiement
+        SELECT 
+            paiement.id_paiement,
+            paiement.montant, 
+            paiement.montant_tva, 
+            paiement.date_paiement, 
+            paiement.ref, 
+            paiement.code_paiement, 
+            paiement.document, 
+            paiement.status, 
+            client.nom_client, 
+            methode_paiement.nom_methode, 
+            users.username,
+            (paiement.montant + paiement.montant_tva) AS total_paiement
+        FROM 
+            paiement
             INNER JOIN client ON paiement.id_client = client.id_client
             INNER JOIN methode_paiement ON paiement.methode = methode_paiement.id_methode 
             INNER JOIN users ON paiement.user_paiement = users.id
-            `;
+    `;
      
     db.query(q, (error, data) => {
-        if (error) res.status(500).send(error);
+        if (error) {
+            console.error("Erreur lors de l'exécution de la requête :", error);
+            return res.status(500).json({ error: "Une erreur s'est produite lors de la récupération des paiements." });
+        }
         return res.status(200).json(data);
     });
 }
+
 
 
 exports.postPaiement = async (req, res) => {
@@ -45,12 +63,14 @@ exports.postPaiement = async (req, res) => {
         const tauxTVA = 16;
         const montantTVA = montant * (tauxTVA / 100);
 
+        const montantTotal = montant + montantTVA;
+
         const qInsert = 'INSERT INTO paiement (`id_client`, `montant`, `montant_tva`, `device`, `methode`, `user_paiement`, `ref`, `code_paiement`, `document`) VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)';
 
         const values = [
             id_client,
             montant,
-            montantTVA,
+            montantTotal,
             req.body.device,
             req.body.methode,
             req.body.user_paiement,
@@ -91,9 +111,6 @@ exports.postPaiement = async (req, res) => {
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du paiement." });
     }
 };
-
-
-
 
 
 //Dette
