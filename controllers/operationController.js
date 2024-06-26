@@ -613,33 +613,6 @@ exports.envoieEmail = async (req, res) => {
               <div style="width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; padding: 10px 0; border-bottom: 1px solid #dddddd;">
           `;
   
-/*           details.forEach(detail => {
-            tableHTML += `
-              <div style="width: 100%; display: flex; flex-direction: column; gap: 10px; padding: 10px;">
-                <span>Matricule: </span>
-                <span>${detail.matricule ?? 'N/A'}</span>
-              </div>
-              <div style="width: 100%; display: flex; flex-direction: column; gap: 10px; padding: 10px;">
-                <span>Photo plaque : </span>
-                <img
-                  style="width: 200px; height: 200px;"
-                  src="${process.env.DOMAIN}${detail.photo_plaque}"
-                  alt="Photo plaque"
-                  onerror="this.onerror=null; this.src='/path/to/placeholder/image.png';"
-                />
-              </div>
-              <div style="width: 100%; display: flex; flex-direction: column; gap: 10px; padding: 10px;">
-                <span>Photo traceur : </span>
-                <img
-                  style="width: 200px; height: 200px;"
-                  src="${process.env.DOMAIN}${detail.photo_traceur}"
-                  alt="Photo traceur"
-                  onerror="this.onerror=null; this.src='/path/to/placeholder/image.png';"
-                />
-              </div>
-            `;
-          }); */
-  
           tableHTML += `
               </div>
             </div>
