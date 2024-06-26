@@ -25,8 +25,7 @@ exports.getPaiement = (req, res) => {
             paiement.status, 
             client.nom_client, 
             methode_paiement.nom_methode, 
-            users.username,
-            (paiement.montant + paiement.montant_tva) AS total_paiement
+            users.username
         FROM 
             paiement
             INNER JOIN client ON paiement.id_client = client.id_client
@@ -35,6 +34,39 @@ exports.getPaiement = (req, res) => {
     `;
      
     db.query(q, (error, data) => {
+        if (error) {
+            console.error("Erreur lors de l'exécution de la requête :", error);
+            return res.status(500).json({ error: "Une erreur s'est produite lors de la récupération des paiements." });
+        }
+        return res.status(200).json(data);
+    });
+}
+
+exports.getPaiementOne = (req, res) => {
+    const { id_paiement } = req.query;
+
+    const q = `
+        SELECT 
+            paiement.id_paiement,
+            paiement.montant, 
+            paiement.montant_tva, 
+            paiement.date_paiement, 
+            paiement.ref, 
+            paiement.code_paiement, 
+            paiement.document, 
+            paiement.status, 
+            client.nom_client, 
+            methode_paiement.nom_methode, 
+            users.username
+        FROM 
+            paiement
+            INNER JOIN client ON paiement.id_client = client.id_client
+            INNER JOIN methode_paiement ON paiement.methode = methode_paiement.id_methode 
+            INNER JOIN users ON paiement.user_paiement = users.id
+        WHERE id_paiement = ?
+    `;
+     
+    db.query(q,[id_paiement], (error, data) => {
         if (error) {
             console.error("Erreur lors de l'exécution de la requête :", error);
             return res.status(500).json({ error: "Une erreur s'est produite lors de la récupération des paiements." });
