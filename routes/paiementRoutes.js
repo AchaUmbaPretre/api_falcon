@@ -12,7 +12,6 @@ const upload = multer({ dest: 'public/uploads/' });
 router.post('/',upload.single('document'), postPaiement)
 
 //Dette
-
 router.get('/dette', getDette)
 router.post('/dette', postDette)
 
