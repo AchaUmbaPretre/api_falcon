@@ -266,6 +266,7 @@ exports.postOperationRempl = async (req, res) => {
 
 
 exports.postOperation = async (req, res) => {
+    console.log(req.body)
     try {
         // Vérification des fichiers requis
         if (!req.files || !req.files['photo_plaque'] || !req.files['photo_traceur']) {
