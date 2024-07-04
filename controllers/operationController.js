@@ -138,6 +138,7 @@ exports.getOperation = (req, res) => {
     ${start_date ? `AND DATE(operations.date_operation) >= '${start_date}'` : ''}
     ${end_date ? `AND DATE(operations.date_operation) <= '${end_date}'` : ''}
     ${id_operation ? `AND operations.id_operations = ?` : ''}
+    GROUP BY operations.id_operations
     ORDER BY operations.created_at DESC;
     `;
     const params = id_operation ? [id_operation] : [];

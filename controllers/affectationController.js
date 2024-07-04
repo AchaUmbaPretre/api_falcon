@@ -70,7 +70,7 @@ exports.getAffectations = (req, res) => {
 
     const { startDate, endDate, search } = req.query; */
     const q = `
-        SELECT affectations.*, numero.numero, traceur.model, traceur.numero_serie
+        SELECT affectations.*, numero.numero, traceur.model, traceur.code
         FROM affectations 
         INNER JOIN numero ON affectations.id_numero = numero.id_numero
         INNER JOIN traceur ON affectations.id_traceur = traceur.id_traceur
