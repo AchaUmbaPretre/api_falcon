@@ -205,7 +205,64 @@ exports.postOperationRempl = async (req, res) => {
     }
 }
 
+/* exports.postOperation = async (req, res) => {
+    try {
+        if (!req.files || !req.files['photo_plaque'] || !req.files['photo_traceur']) {
+            return res.status(400).json({ error: "Les fichiers photo_plaque et photo_traceur sont requis." });
+        }
 
+        const photoPlaqueFile = req.files['photo_plaque'][0];
+        const photoTraceurFile = req.files['photo_traceur'][0];
+
+        const photoPlaqueUrl = `/uploads/${photoPlaqueFile.filename}`;
+        const photoTraceurUrl = `/uploads/${photoTraceurFile.filename}`;
+
+        const insertQuery = `
+            INSERT INTO operations (
+                id_client, site, id_superviseur, id_technicien, date_operation, id_type_operations, 
+                id_traceur, probleme, observation, kilometre, tension, photo_plaque, photo_traceur, user_cr
+            ) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        const values = [
+            req.body.id_client,
+            req.body.site,
+            req.body.id_superviseur,
+            req.body.id_technicien,
+            req.body.date_operation,
+            req.body.id_type_operations,
+            req.body.id_traceur,
+            req.body.probleme,
+            req.body.observation,
+            req.body.kilometre,
+            req.body.tension,
+            photoPlaqueUrl,
+            photoTraceurUrl,
+            req.body.user_cr
+        ];
+
+        await db.query(insertQuery, values);
+
+        // Mettre à jour l'état du traceur en fonction de id_type_operations
+        let updateQuery;
+        if (req.body.id_type_operations === '1') {
+            updateQuery = `UPDATE traceur SET id_client = ${req.body.id_client}, id_etat_traceur = 7 WHERE id_traceur = ${req.body.id_traceur}`;
+        } else if (req.body.id_type_operations === '3') {
+            updateQuery = `UPDATE traceur SET id_client = ${req.body.id_client}, id_etat_traceur = 2 WHERE id_traceur = ${req.body.id_traceur}`;
+        }
+
+        if (updateQuery) {
+            await db.query(updateQuery);
+        }
+
+        return res.json({ message: 'Processus réussi' });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout d'opération." });
+    }
+};
+ */
 
 
 /* exports.postOperation = async (req, res) => {
@@ -294,8 +351,7 @@ exports.postOperationRempl = async (req, res) => {
     }
 }; */
 
-
-/* exports.postOperation = async (req, res) => {
+exports.postOperation = async (req, res) => {
     try {
         // Vérification des fichiers requis
         if (!req.files || !req.files['photo_plaque'] || !req.files['photo_traceur']) {
@@ -369,13 +425,14 @@ exports.postOperationRempl = async (req, res) => {
             updateValues = [req.body.id_client, req.body.id_vehicule, req.body.id_traceur];
         }
         else if (req.body.id_type_operations === '5') {  // Remplacement
-            if(req.body.traceur_echange){
-                    updateQuery = `
-                    UPDATE traceur 
-                    SET id_traceur = ? 
-                    WHERE id_traceur = ?
+
+            if (req.body.traceur_echange && req.body.traceur_echange !== ''){
+                updateQuery = `
+                UPDATE traceur 
+                SET id_traceur = ?, id_etat_traceur = ?, id_vehicule = ? 
+                WHERE id_traceur = ?
                 `;
-                updateValues = [req.body.traceur_echange, req.body.id_traceur];
+                updateValues = [req.body.traceur_echange, req.body.id_etat_traceur, req.body.id_vehicule, req.body.id_traceur];
             }
         }
 
@@ -390,111 +447,7 @@ exports.postOperationRempl = async (req, res) => {
         console.error(error);
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout d'opération." });
     }
-}; */
-
-exports.postOperation = async (req, res) => {
-    try {
-        // Vérification des fichiers requis
-        if (!req.files || !req.files['photo_plaque'] || !req.files['photo_traceur']) {
-            return res.status(400).json({ error: "Les fichiers photo_plaque et photo_traceur sont requis." });
-        }
-
-        // Récupération des fichiers
-        const photoPlaqueFile = req.files['photo_plaque'][0];
-        const photoTraceurFile = req.files['photo_traceur'][0];
-
-        // Création des URLs des fichiers
-        const photoPlaqueUrl = `/uploads/${photoPlaqueFile.filename}`;
-        const photoTraceurUrl = `/uploads/${photoTraceurFile.filename}`;
-
-        // Requête d'insertion
-        const insertQuery = `
-            INSERT INTO operations (
-                id_client, site, id_superviseur, id_technicien, date_operation, id_type_operations, id_vehicule,
-                id_traceur, nomenclature, probleme, observation, kilometre, tension, photo_plaque, photo_traceur, user_cr
-            ) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-
-        const values = [
-            req.body.id_client,
-            req.body.site,
-            req.body.id_superviseur,
-            req.body.id_technicien,
-            req.body.date_operation,
-            req.body.id_type_operations,
-            req.body.id_vehicule,
-            req.body.id_traceur,
-            req.body.nomenclature,
-            req.body.probleme,
-            req.body.observation,
-            req.body.kilometre,
-            req.body.tension,
-            photoPlaqueUrl,
-            photoTraceurUrl,
-            req.body.user_cr
-        ];
-
-        // Exécution de l'insertion
-        await db.query(insertQuery, values);
-
-        // Mise à jour de l'état du traceur en fonction du type d'opération
-        let updateQuery;
-        let updateValues;
-
-        switch (req.body.id_type_operations) {
-            case '1': // Installation
-                updateQuery = `
-                    UPDATE traceur 
-                    SET id_client = ?, id_etat_traceur = 7, id_vehicule = ?
-                    WHERE id_traceur = ?
-                `;
-                updateValues = [req.body.id_client, req.body.id_vehicule, req.body.id_traceur];
-                break;
-            case '3': // Démantèlement
-                updateQuery = `
-                    UPDATE traceur 
-                    SET id_client = NULL, id_etat_traceur = 2, id_vehicule = NULL 
-                    WHERE id_traceur = ?
-                `;
-                updateValues = [req.body.id_traceur];
-                break;
-            case '2': // Transfert
-                updateQuery = `
-                    UPDATE traceur 
-                    SET id_client = ?, id_etat_traceur = 7, id_vehicule = ? 
-                    WHERE id_traceur = ?
-                `;
-                updateValues = [req.body.id_client, req.body.id_vehicule, req.body.id_traceur];
-                break;
-            case '5': // Remplacement
-                if (req.body.traceur_echange) {
-                    updateQuery = `
-                        UPDATE traceur 
-                        SET id_traceur = ? 
-                        WHERE id_traceur = ?
-                    `;
-                    updateValues = [req.body.traceur_echange, req.body.id_traceur];
-                }
-                break;
-            default:
-                break;
-        }
-
-        // Exécution de la mise à jour si nécessaire
-        if (updateQuery) {
-            await db.query(updateQuery, updateValues);
-        }
-
-        // Réponse en cas de succès
-        return res.json({ message: 'Processus réussi' });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout d'opération." });
-    }
 };
-
-
 
 //Site
 exports.getSite = (req, res) => {
