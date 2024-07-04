@@ -114,6 +114,7 @@ exports.getOperation = (req, res) => {
     SELECT 
         operations.*, 
         client.nom_client, 
+        client.email,
         superviseur.username AS superviseur, 
         site.nom_site, 
         traceur.numero_serie, 
@@ -615,6 +616,8 @@ exports.postSignature = async (req, res) => {
 
 exports.envoieEmail = async (req, res) => {
     const { email, id_operations } = req.body;
+
+    console.log(req.body)
   
     if (!Array.isArray(id_operations) || id_operations.length === 0) {
       return res.status(400).json({ error: "id_operations doit être un tableau non vide." });
@@ -728,9 +731,9 @@ exports.envoieEmail = async (req, res) => {
           });
   
         const mailOptions = {
-            from: 'achandambi@gmail.com',
-            to: 'achandambi@gmail.com',
-            subject: 'Vente',
+            from: 'ndoeboutique01@gmail.com',
+            to: email,
+            subject: "Rapport d'installation",
             html: tableHTML,
         };
   
