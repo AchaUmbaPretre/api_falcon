@@ -212,25 +212,44 @@ exports.postClientContact = async (req, res) => {
     }
 }
 
-exports.putClient = (req, res) => {
-    const clientId = req.params.id_client;
+exports.putClient = async (req, res) => {
+    const { id_client } = req.query;
+    const {nom_client, nom_principal, poste, telephone, adresse, email} = req.body;
 
-  const q = "UPDATE client SET `nom_client`= ?, `nom_principal`= ?, `poste`= ?, `telephone`= ?, `adresse`= ?, `email` WHERE id_client = ?"
-  
-  const values = [
-    req.body.nom_client,
-    req.body.nom_principal,
-    req.body.poste,
-    req.body.telephone,
-    req.body.adresse,
-    req.body.email
-]
+    if (!id_client || isNaN(id_client)) {
+        return res.status(400).json({ error: 'Invalid client ID provided' });
+    }
 
-  db.query(q, [...values,clientId], (err, data) => {
-    console.log(err)
-      if (err) return res.send(err);
-      return res.json(data);
-    });
+    try {
+
+        const q = `
+            UPDATE client 
+            SET 
+                nom_client = ?,
+                nom_principal = ?,
+                poste = ?,
+                telephone = ?,
+                adresse = ?,
+                email = ?
+            WHERE id_client = ?
+        `;
+      
+        const values = [nom_client, nom_principal, poste, telephone, adresse, email, id_client];
+
+        // Execute the query
+        const result = await db.query(q, values);
+
+        // Check if update was successful
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Client record not found' });
+        }
+
+        // Return success response
+        return res.json({ message: 'Client record updated successfully' });
+    } catch (err) {
+        console.error("Error updating client:", err);
+        return res.status(500).json({ error: 'Failed to update client record' });
+    }
 }
 
 
