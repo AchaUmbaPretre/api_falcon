@@ -861,19 +861,24 @@ exports.envoieEmail = async (req, res) => {
         });
   
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-              user: 'ndoeboutique01@gmail.com',
-              pass: 'c c h d b z j i s p w n u w g z',
-            },
-          });
-  
-        const mailOptions = {
-            from: 'ndoeboutique01@gmail.com',
-            to: email,
-            subject: "Rapport d'installation",
-            html: tableHTML,
-        };
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false,
+          auth: {
+            user: 'ndoeboutique01@gmail.com',
+            pass: 'c c h d b z j i s p w n u w g z',
+          },
+          tls: {
+            rejectUnauthorized: false
+          }
+        });
+
+      const mailOptions = {
+          from: 'achandambi@gmail.com',
+          to: 'achandambi@gmail.com',
+          subject: "Rapport d'installation",
+          html: tableHTML,
+      };
   
         transporter.sendMail(mailOptions, (error, info) => {
           if (error) {
