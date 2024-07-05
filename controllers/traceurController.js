@@ -199,6 +199,20 @@ exports.getTraceur = (req, res) => {
     });
 };
 
+exports.getTraceurOne = (req, res) => {
+    const {id_traceur} = req.query;
+    const q = `
+        SELECT traceur.model, traceur.numero_serie, traceur.id_traceur, traceur.code
+            FROM traceur 
+        WHERE est_supprime = 0 AND traceur.id_traceur =${id_traceur}
+        `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
 
 
 
