@@ -418,8 +418,8 @@ exports.putTraceur = async (req, res) => {
 
         return res.json({ message: 'Le traceur a été modifié avec succes' });
     } catch (err) {
-        console.error("Error updating client:", err);
-        return res.status(500).json({ error: 'Failed to update client record' });
+        console.error("Error updating traceur:", err);
+        return res.status(500).json({ error: 'Failed to update traceur record' });
     }
 }
 
