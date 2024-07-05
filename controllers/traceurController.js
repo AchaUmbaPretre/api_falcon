@@ -422,7 +422,7 @@ exports.putTraceur = async (req, res) => {
             WHERE id_traceur = ?
         `;
       
-        const values = [model, id_client, numero_serie, traceur_id, code, id_etat_traceur, id_vehicule];
+        const values = [model, id_client, numero_serie, traceur_id, code, id_etat_traceur, id_vehicule, id_traceur];
 
         const result = await db.query(q, values);
 
