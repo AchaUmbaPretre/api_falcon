@@ -127,10 +127,10 @@ exports.getClientAll = (req, res) => {
 exports.getClientOne = (req, res) => {
     const id_client = req.query.id_client;
     const q = `
-        SELECT client.*, contact_client.nom_contact, contact_client.telephone_contact, contact_client.poste_contact, contact_client.email_contact
+        SELECT client.*
             FROM client 
         WHERE est_supprime = 0 AND client.id_client =${id_client}
-            `;
+        `;
      
     db.query(q, (error, data) => {
         if (error) res.status(500).send(error);
@@ -210,6 +210,27 @@ exports.postClientContact = async (req, res) => {
         console.log(error)
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du contact." });
     }
+}
+
+exports.putClient = (req, res) => {
+    const clientId = req.params.id_client;
+
+  const q = "UPDATE client SET `nom_client`= ?, `nom_principal`= ?, `poste`= ?, `telephone`= ?, `adresse`= ?, `email` WHERE id_client = ?"
+  
+  const values = [
+    req.body.nom_client,
+    req.body.nom_principal,
+    req.body.poste,
+    req.body.telephone,
+    req.body.adresse,
+    req.body.email
+]
+
+  db.query(q, [...values,clientId], (err, data) => {
+    console.log(err)
+      if (err) return res.send(err);
+      return res.json(data);
+    });
 }
 
 
