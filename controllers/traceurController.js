@@ -152,6 +152,7 @@ exports.getTraceur = (req, res) => {
     ${idTraceur ? 'AND traceur.id_traceur = ?' : ''}
     ${start_date ? `AND DATE(traceur.date_entree) >= ?` : ''}
     ${end_date ? `AND DATE(traceur.date_entree) <= ?` : ''}
+    GROUP BY traceur.id_traceur
     `;
 
     const dataQuery = `

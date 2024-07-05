@@ -754,141 +754,143 @@ exports.postSignature = async (req, res) => {
         });
       }; */
 
-exports.envoieEmail = async (req, res) => {
-    const { email, id_operations } = req.body;
-  
-    if (!Array.isArray(id_operations) || id_operations.length === 0) {
-      return res.status(400).json({ error: "id_operations doit être un tableau non vide." });
-    }
-  
-    const placeholders = id_operations.map(() => '?').join(',');
-    const q = `
-      SELECT 
-          operations.*, 
-          client.nom_client, 
-          superviseur.username AS superviseur, 
-          site.nom_site, 
-          traceur.numero_serie, 
-          traceur.code,
-          type_operations.nom_type_operations AS type_operations, 
-          technicien.username AS technicien,
-          user_cr.username AS user_cr, numero.numero, vehicule.matricule, marque.nom_marque,
-          DATE_FORMAT(CONVERT_TZ(operations.date_operation, '+00:00', @@session.time_zone), '%Y-%m-%d') AS date_operation,
-          operations.photo_plaque,
-          operations.photo_traceur
-      FROM operations 
-          INNER JOIN client ON operations.id_client = client.id_client
-          INNER JOIN users AS superviseur ON operations.id_superviseur = superviseur.id
-          INNER JOIN users AS technicien ON operations.id_technicien = technicien.id
-          INNER JOIN users AS user_cr ON operations.user_cr = user_cr.id
-          INNER JOIN site ON operations.site = site.id_site
-          INNER JOIN traceur ON operations.id_traceur = traceur.id_traceur
-          INNER JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
-          LEFT JOIN affectations ON traceur.id_traceur = affectations.id_traceur
-          LEFT JOIN numero ON affectations.id_numero = numero.id_numero
-          INNER JOIN vehicule ON operations.id_vehicule = vehicule.id_vehicule
-          INNER JOIN marque ON vehicule.id_marque = marque.id_marque
-      WHERE operations.est_supprime = 0
-        AND operations.id_operations IN (${placeholders})
-      ORDER BY operations.date_operation DESC;
-    `;
-  
-    db.query(q, id_operations, (error, results) => {
-      if (error) {
-        console.log(error);
-        res.status(500).json({ error: "Une erreur s'est produite lors de l'exécution de la requête SQL." });
-      } else {
-        if (results.length === 0) {
-          res.status(404).json({ message: "Aucune opération trouvée pour les identifiants donnés." });
-          return;
+      exports.envoieEmail = async (req, res) => {
+        const { email, id_operations } = req.body;
+      
+        if (!Array.isArray(id_operations) || id_operations.length === 0) {
+          return res.status(400).json({ error: "id_operations doit être un tableau non vide." });
         }
-  
-        const groupedByType = results.reduce((acc, result) => {
-          const type = result.type_operations || 'Autres';
-          if (!acc[type]) acc[type] = [];
-          acc[type].push(result);
-          return acc;
-        }, {});
-  
-        let tableHTML = `
-          <div style="display: flex; flex-direction: column; align-items: center;">
-            <div style="border-bottom: 1px solid #cecece; width: 80%; margin: 10px 0;">
-              <h2 style="padding: 10px 0; margin: 0; font-size: 1rem; color: red; text-align: center; line-height: 25px;">
-                RAPPORT SYNTHETIQUE DES INSTALLATIONS ET CONTROLES TECHNIQUES DES TRACKERS EFFECTUEES
-                EN DATE DU ${new Date().toLocaleDateString()} SUR LES VEHICULE(S) ${results[0].nom_client.toUpperCase()}
-              </h2>
-            </div>
-          </div>
+      
+        const placeholders = id_operations.map(() => '?').join(',');
+        const q = `
+          SELECT 
+              operations.*, 
+              client.nom_client, 
+              superviseur.username AS superviseur, 
+              site.nom_site, 
+              traceur.numero_serie, 
+              traceur.code,
+              type_operations.nom_type_operations AS type_operations, 
+              technicien.username AS technicien,
+              user_cr.username AS user_cr, numero.numero, vehicule.matricule, marque.nom_marque,
+              DATE_FORMAT(CONVERT_TZ(operations.date_operation, '+00:00', @@session.time_zone), '%Y-%m-%d') AS date_operation,
+              operations.photo_plaque,
+              operations.photo_traceur
+          FROM operations 
+              INNER JOIN client ON operations.id_client = client.id_client
+              INNER JOIN users AS superviseur ON operations.id_superviseur = superviseur.id
+              INNER JOIN users AS technicien ON operations.id_technicien = technicien.id
+              INNER JOIN users AS user_cr ON operations.user_cr = user_cr.id
+              INNER JOIN site ON operations.site = site.id_site
+              INNER JOIN traceur ON operations.id_traceur = traceur.id_traceur
+              INNER JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
+              LEFT JOIN affectations ON traceur.id_traceur = affectations.id_traceur
+              LEFT JOIN numero ON affectations.id_numero = numero.id_numero
+              INNER JOIN vehicule ON operations.id_vehicule = vehicule.id_vehicule
+              INNER JOIN marque ON vehicule.id_marque = marque.id_marque
+          WHERE operations.est_supprime = 0
+            AND operations.id_operations IN (${placeholders})
+            GROUP BY operations.id_operations
+          ORDER BY operations.date_operation DESC;
         `;
-  
-        Object.entries(groupedByType).forEach(([type, details], index) => {
-          tableHTML += `
-            <div>
-              <h3 style="padding-top: 20px;">${index + 1}. ${type}</h3>
-              <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 16px; text-align: left;">
-                <thead>
-                  <tr>
-                    <th style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">Matricule</th>
-                    <th style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">Marque</th>
-                    <th style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">Tracker</th>
-                    <th style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">Observation</th>
-                  </tr>
-                </thead>
-                <tbody>
-          `;
-  
-          details.forEach(detail => {
-            tableHTML += `
-              <tr>
-                <td style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">${detail.matricule ?? 'N/A'}</td>
-                <td style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">${detail.nom_marque ?? 'N/A'}</td>
-                <td style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">${detail.code ?? 'N/A'}</td>
-                <td style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">${detail.observation ?? 'N/A'}</td>
-              </tr>
-            `;
-          });
-  
-          tableHTML += `
-                </tbody>
-              </table>
-              <div style="width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; padding: 10px 0; border-bottom: 1px solid #dddddd;">
-          `;
-  
-          tableHTML += `
-              </div>
-            </div>
-          `;
-        });
-  
-        const transporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
-          auth: {
-            user: 'ndoeboutique01@gmail.com',
-            pass: 'c c h d b z j i s p w n u w g z',
-          },
-          tls: {
-            rejectUnauthorized: false
-          }
-        });
-
-      const mailOptions = {
-          from: 'achandambi@gmail.com',
-          to: 'achandambi@gmail.com',
-          subject: "Rapport d'installation",
-          html: tableHTML,
-      };
-  
-        transporter.sendMail(mailOptions, (error, info) => {
+      
+        db.query(q, id_operations, (error, results) => {
           if (error) {
             console.log(error);
-            res.status(500).json({ error: "Une erreur s'est produite lors de l'envoi de l'e-mail." });
+            res.status(500).json({ error: "Une erreur s'est produite lors de l'exécution de la requête SQL." });
           } else {
-            console.log('E-mail envoyé :', info.response);
-            res.status(200).json({ message: 'E-mail envoyé avec succès.' });
+            if (results.length === 0) {
+              res.status(404).json({ message: "Aucune opération trouvée pour les identifiants donnés." });
+              return;
+            }
+      
+            const groupedByType = results.reduce((acc, result) => {
+              const type = result.type_operations || 'Autres';
+              if (!acc[type]) acc[type] = [];
+              acc[type].push(result);
+              return acc;
+            }, {});
+      
+            let tableHTML = `
+              <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="border-bottom: 1px solid #cecece; width: 80%; margin: 10px 0;">
+                  <h2 style="padding: 10px 0; margin: 0; font-size: 1rem; color: red; text-align: center; line-height: 25px;">
+                    RAPPORT SYNTHETIQUE DES INSTALLATIONS ET CONTROLES TECHNIQUES DES TRACKERS EFFECTUEES
+                    EN DATE DU ${new Date().toLocaleDateString()} SUR LES VEHICULE(S) ${results[0].nom_client.toUpperCase()}
+                  </h2>
+                </div>
+              </div>
+            `;
+      
+            Object.entries(groupedByType).forEach(([type, details], index) => {
+              tableHTML += `
+                <div>
+                  <h3 style="padding-top: 20px;">${index + 1}. ${type}</h3>
+                  <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 16px; text-align: left;">
+                    <thead>
+                      <tr>
+                        <th style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">Matricule</th>
+                        <th style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">Marque</th>
+                        <th style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">Tracker</th>
+                        <th style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">Observation</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+              `;
+      
+              details.forEach(detail => {
+                tableHTML += `
+                  <tr>
+                    <td style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">${detail.matricule ?? 'N/A'}</td>
+                    <td style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">${detail.nom_marque ?? 'N/A'}</td>
+                    <td style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">${detail.code ?? 'N/A'}</td>
+                    <td style="border: 1px solid #dddddd; padding: 8px; font-size: .8rem;">${detail.observation ?? 'N/A'}</td>
+                  </tr>
+                `;
+              });
+      
+              tableHTML += `
+                    </tbody>
+                  </table>
+                  <div style="width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; padding: 10px 0; border-bottom: 1px solid #dddddd;">
+              `;
+      
+              tableHTML += `
+                  </div>
+                </div>
+              `;
+            });
+      
+            const transporter = nodemailer.createTransport({
+              host: 'smtp.gmail.com',
+              port: 587,
+              secure: false,
+              auth: {
+                user: 'ndoeboutique01@gmail.com',
+                pass: 'c c h d b z j i s p w n u w g z',
+              },
+              tls: {
+                rejectUnauthorized: false
+              }
+            });
+      
+            const mailOptions = {
+              from: 'ndoeboutique01@gmail.com',
+              to: email, // Utilisez l'email fourni dans le body de la requête
+              subject: 'Rapport',
+              html: tableHTML,
+            };
+      
+            transporter.sendMail(mailOptions, (error, info) => {
+              if (error) {
+                console.log(error);
+                res.status(500).json({ error });
+              } else {
+                console.log('E-mail envoyé :', info.response);
+                res.status(200).json({ message: 'E-mail envoyé avec succès.' });
+              }
+            });
           }
         });
-      }
-    });
-  };
+      };
+      
