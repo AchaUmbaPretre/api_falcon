@@ -385,5 +385,42 @@ const queryAsync = (sql, values) => {
     });
 };
 
+exports.putTraceur = async (req, res) => {
+    const { id_traceur } = req.query;
+    const {model, id_client, numero_serie, traceur_id, code, id_etat_traceur, id_vehicule} = req.body;
+
+    if (!id_traceur || isNaN(id_traceur)) {
+        return res.status(400).json({ error: 'Invalid traceur ID provided' });
+    }
+
+    try {
+
+        const q = `
+            UPDATE traceur 
+            SET 
+                model = ?,
+                id_client = ?,
+                numero_serie = ?,
+                traceur_id = ?,
+                code = ?,
+                id_etat_traceur = ?,
+                id_vehicule = ?
+            WHERE id_traceur = ?
+        `;
+      
+        const values = [model, id_client, numero_serie, traceur_id, code, id_etat_traceur, id_vehicule];
+
+        const result = await db.query(q, values);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Traceur record not found' });
+        }
+
+        return res.json({ message: 'Le traceur a été modifié avec succes' });
+    } catch (err) {
+        console.error("Error updating client:", err);
+        return res.status(500).json({ error: 'Failed to update client record' });
+    }
+}
 
 
