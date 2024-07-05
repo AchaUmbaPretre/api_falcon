@@ -124,6 +124,21 @@ exports.getClientAll = (req, res) => {
     });
 }
 
+exports.getClientOne = (req, res) => {
+    const id_client = req.query.id_client;
+    const q = `
+        SELECT client.*, contact_client.nom_contact, contact_client.telephone_contact, contact_client.poste_contact, contact_client.email_contact
+            FROM client 
+        WHERE est_supprime = 0 AND client.id_client =${id_client}
+            `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+
 /* exports.postClient = async (req, res) => {
     try {
         const q = 'INSERT INTO client(`nom_client`, `nom_principal`, `poste`, `telephone`, `adresse`, `email`) VALUES(?,?,?,?,?,?)';
