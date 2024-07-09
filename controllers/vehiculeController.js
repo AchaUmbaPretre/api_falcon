@@ -118,56 +118,37 @@ exports.getVehicule = (req, res) => {
 
 exports.getVehiculeRapport = (req, res) => {
     const filter = req.query.filter;
-  
+
     let q = `
-    SELECT 
-          operations.*, 
-          client.nom_client, 
-          client.email,
-          superviseur.username AS superviseur, 
-          site.nom_site, 
-          traceur.numero_serie, 
-          traceur.code,
-          type_operations.nom_type_operations AS type_operations, 
-          technicien.username AS technicien,
-          user_cr.username AS user_cr, numero.numero, vehicule.matricule, marque.nom_marque,
-          DATE_FORMAT(CONVERT_TZ(operations.date_operation, '+00:00', @@session.time_zone), '%Y-%m-%d') AS date_operation
-      FROM operations 
-          INNER JOIN client ON operations.id_client = client.id_client
-          INNER JOIN users AS superviseur ON operations.id_superviseur = superviseur.id
-          INNER JOIN users AS technicien ON operations.id_technicien = technicien.id
-          INNER JOIN users AS user_cr ON operations.user_cr = user_cr.id
-          INNER JOIN site ON operations.site = site.id_site
-          INNER JOIN traceur ON operations.id_traceur = traceur.id_traceur
-          INNER JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
-          LEFT JOIN affectations ON traceur.id_traceur = affectations.id_traceur
-          LEFT JOIN numero ON affectations.id_numero = numero.id_numero
-          INNER JOIN vehicule ON operations.id_vehicule = vehicule.id_vehicule
-          INNER JOIN marque ON vehicule.id_marque = marque.id_marque
-      WHERE operations.est_supprime = 0
+    SELECT vehicule.id_marque, vehicule.nom_vehicule, vehicule.id_vehicule, vehicule.matricule, vehicule.created_at, marque.nom_marque, client.nom_client, modeles.modele, traceur.code
+        FROM vehicule 
+        INNER JOIN marque ON vehicule.id_marque = marque.id_marque 
+        INNER JOIN client ON client.id_client = vehicule.id_client 
+        LEFT JOIN modeles ON vehicule.id_modele = modeles.id_modele 
+        LEFT JOIN traceur ON vehicule.id_vehicule = traceur.id_vehicule
+        WHERE 1=1
     `;
-  
+
     if (filter === 'today') {
-        q += ` AND DATE(operations.date_operation) = CURDATE()`;
+        q += ` AND DATE(vehicule.created_at) = CURDATE()`;
     } else if (filter === 'yesterday') {
-        q += ` AND DATE(operations.date_operation) = CURDATE() - INTERVAL 1 DAY`;
+        q += ` AND DATE(vehicule.created_at) = CURDATE() - INTERVAL 1 DAY`;
     } else if (filter === 'last7days') {
-        q += ` AND DATE(operations.date_operation) >= CURDATE() - INTERVAL 7 DAY`;
+        q += ` AND DATE(vehicule.created_at) >= CURDATE() - INTERVAL 7 DAY`;
     } else if (filter === 'last30days') {
-        q += ` AND DATE(operations.date_operation) >= CURDATE() - INTERVAL 30 DAY`;
+        q += ` AND DATE(vehicule.created_at) >= CURDATE() - INTERVAL 30 DAY`;
     } else if (filter === 'last1year') {
-        q += ` AND DATE(operations.date_operation) >= CURDATE() - INTERVAL 1 YEAR`;
+        q += ` AND DATE(vehicule.created_at) >= CURDATE() - INTERVAL 1 YEAR`;
     }
-  
-    q += `
-      GROUP BY operations.id_operations
-      ORDER BY operations.created_at DESC`;
-  
+
+    q += ` ORDER BY vehicule.created_at DESC`;
+
     db.query(q, (error, data) => {
         if (error) return res.status(500).send(error);
         return res.status(200).json(data);
     });
-  };
+};
+
 
 
 /* exports.postVehicule = async (req, res) => {
