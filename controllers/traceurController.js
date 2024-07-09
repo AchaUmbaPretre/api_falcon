@@ -47,6 +47,44 @@ exports.getTraceurCountClient = (req, res) => {
 }
 
 
+exports.getTraceurAll = (req, res) => {
+    const filter = req.query.filter;
+
+    let q = `
+    SELECT traceur.*, etat_traceur.nom_etat_traceur, client.nom_client, vehicule.matricule, marque.nom_marque, numero.numero
+    FROM traceur 
+    LEFT JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
+    LEFT JOIN client ON traceur.id_client = client.id_client
+    LEFT JOIN vehicule ON traceur.id_vehicule = vehicule.id_vehicule
+    LEFT JOIN marque ON vehicule.id_marque = marque.id_marque
+    LEFT JOIN affectations ON traceur.id_traceur = affectations.id_traceur
+    LEFT JOIN numero ON affectations.id_numero = numero.id_numero
+    WHERE traceur.est_supprime = 0
+    `;
+
+    if (filter === 'today') {
+        q += ` AND DATE(traceur.date_entree) = CURDATE()`;
+    } else if (filter === 'yesterday') {
+        q += ` AND DATE(traceur.date_entree) = CURDATE() - INTERVAL 1 DAY`;
+    } else if (filter === 'last7days') {
+        q += ` AND DATE(traceur.date_entree) >= CURDATE() - INTERVAL 7 DAY`;
+    } else if (filter === 'last30days') {
+        q += ` AND DATE(traceur.date_entree) >= CURDATE() - INTERVAL 30 DAY`;
+    } else if (filter === 'last1year') {
+        q += ` AND DATE(traceur.date_entree) >= CURDATE() - INTERVAL 1 YEAR`;
+    }
+
+    q += `
+    GROUP BY traceur.id_traceur
+    ORDER BY traceur.date_entree DESC`;
+
+    db.query(q, (error, data) => {
+        if (error) return res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+};
+
+
 exports.getTraceurCountJour = (req, res) => {
 
     let q = `
@@ -402,6 +440,7 @@ const queryAsync = (sql, values) => {
 exports.putTraceur = async (req, res) => {
     const { id_traceur } = req.query;
     const {model, id_client, numero_serie, traceur_id, code, id_etat_traceur, id_vehicule} = req.body;
+    console.log(req.body)
 
     if (!id_traceur || isNaN(id_traceur)) {
         return res.status(400).json({ error: 'Invalid traceur ID provided' });

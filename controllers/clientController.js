@@ -108,6 +108,37 @@ exports.getClients = (req, res) => {
     });
 };
 
+exports.getClientRapport = (req, res) => {
+    const filter = req.query.filter;
+
+    let q = `
+    SELECT  *
+    FROM client
+    WHERE client.est_supprime = 0
+    `;
+
+    if (filter === 'today') {
+        q += ` AND DATE(client.created_at) = CURDATE()`;
+    } else if (filter === 'yesterday') {
+        q += ` AND DATE(client.created_at) = CURDATE() - INTERVAL 1 DAY`;
+    } else if (filter === 'last7days') {
+        q += ` AND DATE(client.created_at) >= CURDATE() - INTERVAL 7 DAY`;
+    } else if (filter === 'last30days') {
+        q += ` AND DATE(client.created_at) >= CURDATE() - INTERVAL 30 DAY`;
+    } else if (filter === 'last1year') {
+        q += ` AND DATE(client.created_at) >= CURDATE() - INTERVAL 1 YEAR`;
+    }
+
+    q += `
+    GROUP BY client.id_client
+    ORDER BY client.created_at DESC`;
+
+    db.query(q, (error, data) => {
+        if (error) return res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+};
+
 
 exports.getClientAll = (req, res) => {
     const id_client = req.query.id_client;

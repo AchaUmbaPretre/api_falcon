@@ -150,6 +150,59 @@ exports.getOperation = (req, res) => {
     });
 }
 
+exports.getOperationRapport = (req, res) => {
+  const filter = req.query.filter;
+
+  let q = `
+  SELECT 
+        operations.*, 
+        client.nom_client, 
+        client.email,
+        superviseur.username AS superviseur, 
+        site.nom_site, 
+        traceur.numero_serie, 
+        traceur.code,
+        type_operations.nom_type_operations AS type_operations, 
+        technicien.username AS technicien,
+        user_cr.username AS user_cr, numero.numero, vehicule.matricule, marque.nom_marque,
+        DATE_FORMAT(CONVERT_TZ(operations.date_operation, '+00:00', @@session.time_zone), '%Y-%m-%d') AS date_operation
+    FROM operations 
+        INNER JOIN client ON operations.id_client = client.id_client
+        INNER JOIN users AS superviseur ON operations.id_superviseur = superviseur.id
+        INNER JOIN users AS technicien ON operations.id_technicien = technicien.id
+        INNER JOIN users AS user_cr ON operations.user_cr = user_cr.id
+        INNER JOIN site ON operations.site = site.id_site
+        INNER JOIN traceur ON operations.id_traceur = traceur.id_traceur
+        INNER JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
+        LEFT JOIN affectations ON traceur.id_traceur = affectations.id_traceur
+        LEFT JOIN numero ON affectations.id_numero = numero.id_numero
+        INNER JOIN vehicule ON operations.id_vehicule = vehicule.id_vehicule
+        INNER JOIN marque ON vehicule.id_marque = marque.id_marque
+    WHERE operations.est_supprime = 0
+  `;
+
+  if (filter === 'today') {
+      q += ` AND DATE(operations.date_operation) = CURDATE()`;
+  } else if (filter === 'yesterday') {
+      q += ` AND DATE(operations.date_operation) = CURDATE() - INTERVAL 1 DAY`;
+  } else if (filter === 'last7days') {
+      q += ` AND DATE(operations.date_operation) >= CURDATE() - INTERVAL 7 DAY`;
+  } else if (filter === 'last30days') {
+      q += ` AND DATE(operations.date_operation) >= CURDATE() - INTERVAL 30 DAY`;
+  } else if (filter === 'last1year') {
+      q += ` AND DATE(operations.date_operation) >= CURDATE() - INTERVAL 1 YEAR`;
+  }
+
+  q += `
+    GROUP BY operations.id_operations
+    ORDER BY operations.created_at DESC`;
+
+  db.query(q, (error, data) => {
+      if (error) return res.status(500).send(error);
+      return res.status(200).json(data);
+  });
+};
+
 exports.postOperationRempl = async (req, res) => {
 
     if (!req.files || Object.keys(req.files).length === 0) {
@@ -355,20 +408,16 @@ exports.postOperationRempl = async (req, res) => {
 
 exports.postOperation = async (req, res) => {
     try {
-        // Vérification des fichiers requis
         if (!req.files || !req.files['photo_plaque'] || !req.files['photo_traceur']) {
             return res.status(400).json({ error: "Les fichiers photo_plaque et photo_traceur sont requis." });
         }
 
-        // Récupération des fichiers
         const photoPlaqueFile = req.files['photo_plaque'][0];
         const photoTraceurFile = req.files['photo_traceur'][0];
 
-        // Création des URLs des fichiers
         const photoPlaqueUrl = `/uploads/${photoPlaqueFile.filename}`;
         const photoTraceurUrl = `/uploads/${photoTraceurFile.filename}`;
 
-        // Requête d'insertion
         const insertQuery = `
             INSERT INTO operations (
                 id_client, site, id_superviseur, id_technicien, date_operation, id_type_operations, id_vehicule,
@@ -396,10 +445,8 @@ exports.postOperation = async (req, res) => {
             req.body.user_cr
         ];
 
-        // Exécution de l'insertion
         await db.query(insertQuery, values);
 
-        // Mise à jour de l'état du traceur en fonction du type d'opération
         let updateQuery;
         let updateValues;
 
