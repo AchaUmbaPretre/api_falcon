@@ -22,6 +22,7 @@ exports.menusAll = (req, res) => {
         INNER JOIN submenus ON menus.id = submenus.menu_id
         LEFT JOIN permission ON menus.id = permission.menus_id
         ${userId ? `WHERE permission.user_id = ${userId}` : ''}
+        GROUP BY menus.id, submenus.id
         ORDER BY menus.id, submenus.id
     `;
 

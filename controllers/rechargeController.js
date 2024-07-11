@@ -109,7 +109,7 @@ exports.getRecharge = (req, res) => {
     });
 };
 
-exports.postRecharge = async (req, res) => {
+/* exports.postRecharge = async (req, res) => {
     try {
         const q = 'INSERT INTO recharge (`id_client`, `id_traceur`, `id_numero`,`days`, `user_cr`) VALUES (?, ?, ?, ?, ?)';
         const values = [
@@ -132,8 +132,45 @@ exports.postRecharge = async (req, res) => {
         console.error(error);
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du contact." });
     }
-}
+} */
 
+exports.postRecharge = async (req, res) => {
+        try {
+            const { id_client, id_traceur, id_numero, days, user_cr } = req.body;
+    
+            // Vérifiez si le numéro a déjà été rechargé aujourd'hui
+            const checkQuery = `
+                SELECT COUNT(*) AS count FROM recharge 
+                WHERE id_numero = ? AND DATE(created_at) = CURDATE()
+            `;
+            db.query(checkQuery, [id_numero], (errorCheck, resultCheck) => {
+                if (errorCheck) {
+                    console.error(errorCheck);
+                    return res.status(500).json({ error: "Une erreur s'est produite lors de la vérification du numéro." });
+                }
+    
+                if (resultCheck[0].count > 0) {
+                    return res.status(400).json({ error: "Le numéro a déjà été rechargé aujourd'hui." });
+                }
+    
+                // Procédez à l'insertion si le numéro n'a pas été rechargé aujourd'hui
+                const insertQuery = 'INSERT INTO recharge (`id_client`, `id_traceur`, `id_numero`,`days`, `user_cr`) VALUES (?, ?, ?, ?, ?)';
+                const values = [id_client, id_traceur, id_numero, days, user_cr];
+    
+                db.query(insertQuery, values, (errorInsert, dataInsert) => {
+                    if (errorInsert) {
+                        console.error(errorInsert);
+                        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du produit." });
+                    } else {
+                        return res.json({ message: 'Processus réussi' });
+                    }
+                });
+            });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du contact." });
+        }
+    };
 
 exports.deleteRecharge = (req, res) => {
     const id_recharge = req.params.id;
