@@ -105,6 +105,54 @@ exports.getPersonnel = async (req, res) => {
   });
 };
 
+exports.getPersonnelOne = async (req, res) => {
+  const { userId } = req.query;
+  const query = 'SELECT * FROM users WHERE id = ?';
+
+  db.query(query,[userId], (error, data) => {
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+    res.status(200).json(data);
+  });
+};
+
+exports.putPersonnel = async (req, res) => {
+  const { userId } = req.query;
+  const {username, email, telephone, role} = req.body;
+
+  if (!userId || isNaN(userId)) {
+    return res.status(400).json({ error: 'Invalid client ID provided' });
+  }
+
+  try {
+
+    const q = `
+        UPDATE users 
+        SET 
+            username = ?,
+            telephone = ?,
+            adresse = ?,
+            email = ?
+        WHERE id = ?
+    `;
+  
+    const values = [username, email, telephone, role];
+
+    const result = await db.query(q, values);
+
+    if (result.affectedRows === 0) {
+        return res.status(404).json({ error: 'User record not found' });
+    }
+
+    return res.json({ message: 'User record updated successfully' });
+} catch (err) {
+    console.error("Error updating user:", err);
+    return res.status(500).json({ error: 'Failed to update user record' });
+}
+
+}
+
 exports.detailForgot = (req, res) => {
   const { email } = req.query;
   const q = `SELECT users.username, users.id, users.email FROM users WHERE email = ?`
