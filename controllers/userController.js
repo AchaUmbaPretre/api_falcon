@@ -107,7 +107,7 @@ exports.getPersonnel = async (req, res) => {
 
 exports.getPersonnelOne = async (req, res) => {
   const { userId } = req.query;
-  const query = 'SELECT * FROM users WHERE id = ?';
+  const query = 'SELECT users.username, users.id, users.email, users.telephone, role FROM users WHERE id = ?';
 
   db.query(query,[userId], (error, data) => {
     if (error) {
@@ -119,10 +119,11 @@ exports.getPersonnelOne = async (req, res) => {
 
 exports.putPersonnel = async (req, res) => {
   const { userId } = req.query;
+
   const {username, email, telephone, role} = req.body;
 
   if (!userId || isNaN(userId)) {
-    return res.status(400).json({ error: 'Invalid client ID provided' });
+    return res.status(400).json({ error: 'Invalid utilisateur ID provided' });
   }
 
   try {
@@ -131,13 +132,13 @@ exports.putPersonnel = async (req, res) => {
         UPDATE users 
         SET 
             username = ?,
+            email = ?,
             telephone = ?,
-            adresse = ?,
-            email = ?
+            role = ?
         WHERE id = ?
     `;
   
-    const values = [username, email, telephone, role];
+    const values = [username, email, telephone, role, userId];
 
     const result = await db.query(q, values);
 
