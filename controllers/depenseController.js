@@ -138,13 +138,13 @@ exports.getDepense30jours = (req, res) => {
 exports.getDepense1an = (req, res) => {
   
     const q = `SELECT 
-              CASE
-                  WHEN SUM(depense.montant) IS NOT NULL THEN ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2)
-                  ELSE ROUND(SUM(depense.montant_franc * 0.00036), 2)
-              END AS total_depense
-              FROM depense
-                WHERE DATE(depense.date_depense) >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
-              GROUP BY DATE(depense.date_depense)
+                CASE
+                    WHEN SUM(depense.montant) IS NOT NULL THEN ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2)
+                    ELSE ROUND(SUM(depense.montant_franc * 0.00036), 2)
+                END AS total_depense
+                FROM depense
+                    WHERE DATE(depense.date_depense) >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+                GROUP BY DATE(depense.date_depense)
                 `;
      
     db.query(q, (error, data) => {

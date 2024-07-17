@@ -152,7 +152,7 @@ exports.putPersonnel = async (req, res) => {
     return res.status(500).json({ error: 'Failed to update user record' });
 }
 
-}
+};
 
 exports.detailForgot = (req, res) => {
   const { email } = req.query;
@@ -164,8 +164,7 @@ exports.detailForgot = (req, res) => {
     }
     res.status(200).json(data);
   });
-}
-
+};
 
 exports.updateUser = async (req, res) => {
   const id = req.params.id
