@@ -500,10 +500,12 @@ exports.postOperation = async (req, res) => {
 
 //Site
 exports.getSite = (req, res) => {
+    const { id_client } = req.query
     const q = `
             SELECT site.*, client.nom_client
                 FROM site
             INNER JOIN client ON site.id_client = client.id_client
+            ${id_client ? `WHERE site.id_client = ${id_client}`: ''}
             `;
      
     db.query(q, (error, data) => {

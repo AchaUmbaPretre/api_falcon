@@ -19,6 +19,7 @@ router.post('/', upload.fields([{ name: 'photo_plaque', maxCount: 1 }, { name: '
 
 //Site
 router.get('/site', getSite)
+router.get('/siteOne', getSite)
 router.post('/site', postSite)
 
 //Type d'operations
