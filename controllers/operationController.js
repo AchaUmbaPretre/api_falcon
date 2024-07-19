@@ -531,7 +531,6 @@ exports.postSite = async (req, res) => {
 }
 
 
-
 //Opération
 exports.getTypeOperation = (req, res) => {
     const q = `
