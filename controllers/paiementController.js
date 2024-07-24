@@ -143,6 +143,34 @@ exports.postPaiement = async (req, res) => {
 };
 
 
+exports.getPaiementMois = (req, res) => {
+    const {months} = req.query;
+  
+      const q = `SELECT MONTH(date_paiement) AS mois, SUM(montant) AS total_paiement
+      FROM paiement WHERE est_supprime = 0
+      ${months ? `AND YEAR(date_paiement) = '${months}'` : ''}
+      GROUP BY mois`;
+    
+      db.query(q ,(error, data)=>{
+        if(error) res.status(500).send(error)
+    
+        return res.status(200).json(data);
+    })
+    }
+
+exports.getPaiementTout = (req, res) => {
+      
+          const q = `SELECT MONTH(date_paiement) AS mois, SUM(montant) AS total_paiement
+          FROM paiement WHERE est_supprime = 0`;
+        
+          db.query(q ,(error, data)=>{
+            if(error) res.status(500).send(error)
+        
+            return res.status(200).json(data);
+        })
+ }
+
+
 //Dette
 exports.getDette = (req, res) => {
     const q = `

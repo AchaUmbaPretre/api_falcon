@@ -325,4 +325,20 @@ exports.getDepenseMois = (req, res) => {
         
             return res.status(200).json(data);
         })
+    }
+    
+exports.getDepenseTotalTout = (req, res) => {
+
+    const q = `SELECT 
+          ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2) AS total_depense
+      FROM 
+          depense
+      WHERE 
+          depense.est_supprime = 0 `;
+          
+              db.query(q ,(error, data)=>{
+                if(error) res.status(500).send(error)
+            
+                return res.status(200).json(data);
+              })
         }
