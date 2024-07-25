@@ -326,15 +326,28 @@ exports.getDepenseMois = (req, res) => {
             return res.status(200).json(data);
         })
     }
-    
-exports.getDepenseTotalTout = (req, res) => {
 
-    const q = `SELECT 
+exports.getDepenseTotalTout = (req, res) => {
+    const filter = req.query.filter;
+
+    let q = `SELECT 
           ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2) AS total_depense
       FROM 
           depense
       WHERE 
           depense.est_supprime = 0 `;
+
+        if (filter === 'today') {
+            q += ` AND DATE(depense.date_depense) = CURDATE()`;
+        } else if (filter === 'yesterday') {
+            q += ` AND DATE(depense.date_depense) = CURDATE() - INTERVAL 1 DAY`;
+        } else if (filter === 'last7days') {
+            q += ` AND DATE(depense.date_depense) >= CURDATE() - INTERVAL 7 DAY`;
+        } else if (filter === 'last30days') {
+            q += ` AND DATE(depense.date_depense) >= CURDATE() - INTERVAL 30 DAY`;
+        } else if (filter === 'last1year') {
+            q += ` AND DATE(depense.date_depense) >= CURDATE() - INTERVAL 1 YEAR`;
+        }
           
               db.query(q ,(error, data)=>{
                 if(error) res.status(500).send(error)
