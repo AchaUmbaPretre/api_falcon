@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 
 dotenv.config();
 
-exports.registerController = async (req, res) => {
+/* exports.registerController = async (req, res) => {
   const { username, email, password, role } = req.body;
 
   try {
@@ -22,6 +22,45 @@ exports.registerController = async (req, res) => {
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
+      const insertQuery = 'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)';
+      const insertValues = [username, email, hashedPassword, role];
+
+      db.query(insertQuery, insertValues, (err, insertResult) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+
+        res.status(201).json({ message: 'Enregistré avec succès', success: true });
+      });
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: `Erreur dans le contrôleur de registre : ${err.message}`,
+    });
+  }
+};
+ */
+
+exports.registerController = async (req, res) => {
+  const { username, email, password, role } = req.body;
+
+  try {
+    const query = 'SELECT * FROM users WHERE email = ?';
+    const values = [email];
+
+    db.query(query, values, async (err, results) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      if (results.length > 0) {
+        return res.status(200).json({ message: 'Utilisateur existe déjà', success: false });
+      }
+
+      const defaultPassword = password || '1234';
+      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
       const insertQuery = 'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)';
       const insertValues = [username, email, hashedPassword, role];
 
