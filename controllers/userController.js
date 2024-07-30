@@ -43,7 +43,7 @@ dotenv.config();
  */
 
 exports.registerController = async (req, res) => {
-  const { username, email, password, role } = req.body;
+  const { username, email, password, role, telephone } = req.body;
 
   try {
     const query = 'SELECT * FROM users WHERE email = ?';
@@ -61,8 +61,8 @@ exports.registerController = async (req, res) => {
       const defaultPassword = password || '1234';
       const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
-      const insertQuery = 'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)';
-      const insertValues = [username, email, hashedPassword, role];
+      const insertQuery = 'INSERT INTO users (username, email, password, telephone, role) VALUES (?, ?, ?, ?, ?)';
+      const insertValues = [username, email, hashedPassword,telephone, role];
 
       db.query(insertQuery, insertValues, (err, insertResult) => {
         if (err) {

@@ -8,6 +8,6 @@ router.get('/', getMenu)
 router.get('/permissions', permissions)
 router.get('/user-permissions', getPermissions)
 router.post('/user-permissions', PostUserPermission)
-router.put('/:userId/permissions/permissionUpdate/:optionId', putPermission)
-
+/* router.put('/:userId/permissions/permissionUpdate/:optionId', putPermission) */
+router.put('/:userId/permissions/:optionId', putPermission)
 module.exports = router;
