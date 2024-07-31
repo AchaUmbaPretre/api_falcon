@@ -23,7 +23,7 @@ exports.menusAll = (req, res) => {
         LEFT JOIN permission ON menus.id = permission.menus_id
         ${userId ? `WHERE permission.user_id = ${userId}` : ''}
         GROUP BY menus.id, submenus.id
-        ORDER BY menus.id, submenus.id
+        ORDER BY menus.indexNum Asc
     `;
 
     db.query(query,(err, results) => {
