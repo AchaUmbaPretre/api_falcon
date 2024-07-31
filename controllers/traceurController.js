@@ -230,7 +230,7 @@ exports.getTraceur = (req, res) => {
             }
 
             return res.status(200).json({
-                total: countData[0].total,
+                total: countData[0]?.total,
                 rows: data
             });
         });
@@ -565,16 +565,16 @@ exports.getModelTraceur = (req, res) => {
 exports.postTraceur = async (req, res) => {
     const insertQueryAff = 'INSERT INTO affectations(`id_numero`, `id_traceur`) VALUES(?,?)';
     const insertQueryNumero = 'INSERT INTO numero(`numero`) VALUES (?)';
-    const checkQueryTraceur = 'SELECT COUNT(*) AS count FROM traceur WHERE numero_serie = ?';
+    const checkQueryTraceur = 'SELECT COUNT(*) AS count FROM traceur WHERE code = ?';
     const insertQueryTraceur = 'INSERT INTO traceur(`model`, `id_client`, `numero_serie`, `traceur_id`, `code`, `id_etat_traceur`, `id_vehicule`) VALUES(?,?,?,?,?,?,?)';
     const checkQueryNumero = 'SELECT id_numero FROM numero WHERE numero = ?';
     const checkQueryAff = 'SELECT COUNT(*) AS count FROM affectations WHERE id_numero = ? AND id_traceur = ?';
 
     try {
         
-        const traceurExists = await queryAsync(checkQueryTraceur, [req.body.numero_serie]);
+        const traceurExists = await queryAsync(checkQueryTraceur, [req.body.code]);
         if (traceurExists[0].count > 0) {
-            return res.status(400).json({ message: `Le traceur avec le numéro de série ${req.body.numero_serie} existe déjà.` });
+            return res.status(400).json({ message: `Le traceur avec le numéro de série ${req.body.code} existe déjà.` });
         }
         const traceurValues = [
             req.body.model,

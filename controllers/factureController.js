@@ -22,6 +22,58 @@ exports.getFacture = (req, res) => {
     });
 };
 
+exports.getTarif = (req, res) => {
+    const q = `
+        SELECT * FROM tarif
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getOperationFacture = (req, res) => {
+    const { start_date, end_date, id_client } = req.query;
+
+    const q = `
+    SELECT 
+        operations.id_operations, 
+        client.nom_client, 
+        traceur.code, 
+        type_operations.nom_type_operations AS type_operations,
+        vehicule.nom_vehicule,
+        etat_traceur.nom_etat_traceur,
+        DATE_FORMAT(CONVERT_TZ(operations.date_operation, '+00:00', @@session.time_zone), '%Y-%m-%d') AS date_operation
+    FROM operations 
+        INNER JOIN client ON operations.id_client = client.id_client
+        LEFT JOIN traceur ON operations.id_traceur = traceur.id_traceur
+        LEFT JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
+        INNER JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
+        INNER JOIN vehicule ON operations.id_vehicule = vehicule.id_vehicule
+    WHERE operations.est_supprime = 0
+    ${start_date ? `AND DATE(operations.date_operation) >= '${start_date}'` : ''}
+    ${end_date ? `AND DATE(operations.date_operation) <= '${end_date}'` : ''}
+    ${id_client ? `AND operations.id_client = '${id_client}'` : ''}
+    
+    GROUP BY operations.id_operations
+    ORDER BY operations.created_at DESC;
+    `;
+
+    db.query(q, (error, data) => {
+        if (error) {
+            res.status(500).send(error);
+        } else {
+            const result = {
+                actif: data.filter(item => item.nom_etat_traceur === 'Actif'),
+                autres: data.filter(item => item.nom_etat_traceur !== 'Actif' || item.nom_etat_traceur === null)
+            };
+            res.status(200).json(result);
+        }
+    });
+};
+
+
 
 /* exports.postFacture = (req, res) => {
     const { id_client, date_facture, details } = req.body;
