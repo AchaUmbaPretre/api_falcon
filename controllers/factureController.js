@@ -46,7 +46,7 @@ exports.getClientTarif = (req, res) => {
     });
 }
 
-exports.getOperationFacture = (req, res) => {
+/* exports.getOperationFacture = (req, res) => {
     const { start_date, end_date, id_client } = req.query;
 
     const q = `
@@ -85,8 +85,57 @@ exports.getOperationFacture = (req, res) => {
             res.status(200).json(result);
         }
     });
-};
+}; */
 
+exports.getOperationFacture = (req, res) => {
+    const { start_date, end_date, id_client } = req.query;
+
+    // Requête SQL pour obtenir toutes les opérations
+    const q = `
+    SELECT 
+        operations.id_operations, 
+        client.nom_client, 
+        traceur.code, 
+        type_operations.nom_type_operations AS type_operations,
+        vehicule.id_vehicule,
+        vehicule.nom_vehicule,
+        etat_traceur.nom_etat_traceur,
+        DATE_FORMAT(CONVERT_TZ(operations.date_operation, '+00:00', @@session.time_zone), '%Y-%m-%d') AS date_operation
+    FROM operations 
+        INNER JOIN client ON operations.id_client = client.id_client
+        LEFT JOIN traceur ON operations.id_traceur = traceur.id_traceur
+        LEFT JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
+        INNER JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
+        INNER JOIN vehicule ON operations.id_vehicule = vehicule.id_vehicule
+    WHERE operations.est_supprime = 0
+    ${id_client ? `AND operations.id_client = '${id_client}'` : ''}
+    GROUP BY operations.id_operations
+    ORDER BY operations.created_at DESC;
+    `;
+
+    db.query(q, (error, data) => {
+        if (error) {
+            res.status(500).send(error);
+        } else {
+            // Filtrer les données en JavaScript
+            const allOperations = data;
+            const activeOperations = allOperations.filter(item => item.nom_etat_traceur === 'Actif');
+            const operationsInDateRange = allOperations.filter(item => {
+                const operationDate = new Date(item.date_operation);
+                const isWithinDateRange = (!start_date || operationDate >= new Date(start_date)) &&
+                                           (!end_date || operationDate <= new Date(end_date));
+                return isWithinDateRange;
+            });
+
+            const result = {
+                actif: activeOperations,
+                autres: operationsInDateRange
+            };
+
+            res.status(200).json(result);
+        }
+    });
+};
 
 
 
