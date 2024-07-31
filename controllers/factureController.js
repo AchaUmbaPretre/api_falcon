@@ -13,6 +13,7 @@ exports.getFacture = (req, res) => {
         INNER JOIN facture_details ON factures.id_facture = facture_details.id_facture
         LEFT JOIN remises ON facture_details.id_remise = remises.id_remise
         LEFT JOIN taxes ON facture_details.id_taxe = taxes.id_taxes
+        GROUP BY factures.id_facture
         LIMIT ?, ?
     `;
     
@@ -33,6 +34,18 @@ exports.getTarif = (req, res) => {
     });
 }
 
+exports.getClientTarif = (req, res) => {
+    const q = `
+        SELECT clienttarif.*, client.nom_client FROM clienttarif 
+        INNER JOIN client ON clienttarif.id_client = client.id_client
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
 exports.getOperationFacture = (req, res) => {
     const { start_date, end_date, id_client } = req.query;
 
@@ -42,6 +55,7 @@ exports.getOperationFacture = (req, res) => {
         client.nom_client, 
         traceur.code, 
         type_operations.nom_type_operations AS type_operations,
+        vehicule.id_vehicule,
         vehicule.nom_vehicule,
         etat_traceur.nom_etat_traceur,
         DATE_FORMAT(CONVERT_TZ(operations.date_operation, '+00:00', @@session.time_zone), '%Y-%m-%d') AS date_operation
@@ -75,29 +89,33 @@ exports.getOperationFacture = (req, res) => {
 
 
 
-/* exports.postFacture = (req, res) => {
-    const { id_client, date_facture, details } = req.body;
 
-    let total = 0;
+exports.postFacture = (req, res) => {
+    const { id_client, date_facture, total, details } = req.body;
 
-    details.forEach(detail => {
-        total += detail.prix_unitaire * detail.quantite;
-    });
+    console.log(req.body)
 
     db.query('INSERT INTO factures (id_client, date_facture, total) VALUES (?, ?, ?)', [id_client, date_facture, total], (err, result) => {
         if (err) throw err;
-
         const id_facture = result.insertId;
+        details.forEach(detail => {
+            db.query('INSERT INTO facture_details (id_facture, id_vehicule, quantite, prix_unitaire, montant, id_remise, id_taxe) VALUES (?, ?, ?, ?, ?, ?,?)', 
+                [id_facture, detail, detail.quantite, detail.prix_unitaire, detail.quantite , detail.id_remise, detail.id_taxe], (err) => {
+                    if (err) throw err;
+                });
+        });
+
+        res.send('Processus reussi');
+    });
+}
+
+/*         const id_facture = result.insertId;
         details.forEach(detail => {
             db.query('INSERT INTO facture_details (id_facture, quantite, prix_unitaire, montant, id_remise, id_taxe) VALUES (?, ?, ?, ?, ?, ?)', 
                 [id_facture, detail.quantite, detail.prix_unitaire, detail.quantite * detail.prix_unitaire, detail.id_remise, detail.id_taxe], (err) => {
                     if (err) throw err;
                 });
-        });
-
-        res.send({ id_facture });
-    });
-} */
+        }); */
 
 /* exports.postFacture = (req, res) => {
     const { id_client, date_facture, details } = req.body;
@@ -170,7 +188,7 @@ exports.getOperationFacture = (req, res) => {
     }
 } */
 
-exports.postFacture = (req, res) => {
+/* exports.postFacture = (req, res) => {
     const { id_client, date_facture, details } = req.body;
 
     let totalSansTaxe = 0;
@@ -221,7 +239,7 @@ exports.postFacture = (req, res) => {
 
         res.send({ id_facture });
     });
-}
+} */
 
 
 exports.getTaxes = (req, res) => {
