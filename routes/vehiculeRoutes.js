@@ -1,5 +1,5 @@
 const express = require("express");
-const { getVehicule, postVehicule, getMarque, postMarque, getVehiculeCount, deleteMarque, getModeleOne, getVehiculeCountJour, getVehiculeCountHier, getVehiculeCount7jours, getVehiculeCount30jours, getVehiculeCount1an, getVehiculeRapport } = require("../controllers/vehiculeController");
+const { getVehicule, postVehicule, getMarque, postMarque, getVehiculeCount, deleteMarque, getModeleOne, getVehiculeCountJour, getVehiculeCountHier, getVehiculeCount7jours, getVehiculeCount30jours, getVehiculeCount1an, getVehiculeRapport, getVehiculeRapportGen } = require("../controllers/vehiculeController");
 const verifyToken = require("../midllewares/verifyToken");
 const router = express.Router();
 
@@ -21,5 +21,8 @@ router.delete('/marque/:id', deleteMarque)
 
 //Modele
 router.get('/modele', getModeleOne)
+
+//Rapport general
+router.get('/vehicule_gen', getVehiculeRapportGen)
 
 module.exports = router;

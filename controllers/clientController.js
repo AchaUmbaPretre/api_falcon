@@ -300,19 +300,48 @@ exports.deleteClient = (req, res) => {
 exports.getClientRapportGen = (req, res) => {
 
     const q = `
-        SELECT 
-            client.id_client, 
-            client.nom_client, 
-            client.telephone,
-            TIMESTAMPDIFF(YEAR, client.created_at, CURDATE()) AS nbre_annee,
-            TIMESTAMPDIFF(MONTH, client.created_at, CURDATE()) AS nbre_mois
-        FROM 
-            client 
-        LEFT JOIN 
-            contact_client ON client.id_client = contact_client.id_client
-        WHERE 
-            est_supprime = 0
-        GROUP BY client.id_client
+    SELECT 
+        client.id_client, 
+        client.nom_client, 
+        client.telephone,
+        TIMESTAMPDIFF(YEAR, client.created_at, CURDATE()) AS nbre_annee,
+        TIMESTAMPDIFF(MONTH, client.created_at, CURDATE()) AS nbre_mois,
+        IFNULL(vehicule_count.nbre_vehicule, 0) AS nbre_vehicule,
+        IFNULL(factures_count.nbre_facture, 0) AS nbre_facture,
+        IFNULL(factures_count.total_facture, 0) AS montant_total_facture
+    FROM 
+        client 
+    LEFT JOIN 
+        contact_client ON client.id_client = contact_client.id_client
+    LEFT JOIN 
+        (
+            SELECT 
+                id_client, 
+                COUNT(*) AS nbre_vehicule
+            FROM 
+                vehicule
+            GROUP BY 
+                id_client
+        ) AS vehicule_count
+    ON 
+        client.id_client = vehicule_count.id_client
+    LEFT JOIN 
+        (
+            SELECT 
+                id_client, 
+                COUNT(*) AS nbre_facture,
+                SUM(factures.total) AS total_facture
+            FROM 
+                factures
+            GROUP BY 
+                id_client
+        ) AS factures_count
+    ON 
+        client.id_client = factures_count.id_client
+    WHERE 
+        est_supprime = 0
+    GROUP BY 
+        client.id_client;
             `;  
      
     db.query(q, (error, data) => {

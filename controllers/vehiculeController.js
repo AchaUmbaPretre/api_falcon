@@ -243,7 +243,6 @@ exports.postVehicule = async (req, res) => {
 };
 
 
-
 exports.getMarque = (req, res) => {
     const q = `
     SELECT *
@@ -302,4 +301,45 @@ exports.getModeleOne = (req, res) => {
         return res.status(200).json(data);
     });
 
+}
+
+//Rapport client general
+exports.getVehiculeRapportGen = (req, res) => {
+
+    const q = `
+    SELECT 
+        vehicule.nom_vehicule, 
+        vehicule.id_client,
+        client.nom_client,
+        TIMESTAMPDIFF(YEAR, vehicule.created_at, CURDATE()) AS nbre_annee,
+        TIMESTAMPDIFF(MONTH, vehicule.created_at, CURDATE()) AS nbre_mois,
+        TIMESTAMPDIFF(DAY, vehicule.created_at, CURDATE()) AS nbre_jour,
+        COALESCE(facture_details_count.nbre_facture, 0) AS nbre_facture,
+        COALESCE(facture_details_count.total_facture, 0) AS nbre_facture_total
+    FROM 
+        vehicule
+    INNER JOIN 
+        client 
+    ON 
+        vehicule.id_client = client.id_client
+    LEFT JOIN 
+        (
+            SELECT 
+                id_vehicule, 
+                COUNT(*) AS nbre_facture,
+                SUM(facture_details.montant) AS total_facture
+            FROM 
+                facture_details
+            GROUP BY 
+                id_vehicule
+        ) AS facture_details_count
+    ON 
+        vehicule.id_vehicule = facture_details_count.id_vehicule;
+
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
 }
