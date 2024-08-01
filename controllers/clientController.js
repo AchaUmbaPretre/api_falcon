@@ -295,3 +295,28 @@ exports.deleteClient = (req, res) => {
     });
   
   }
+
+
+exports.getClientRapportGen = (req, res) => {
+
+    const q = `
+        SELECT 
+            client.id_client, 
+            client.nom_client, 
+            client.telephone,
+            TIMESTAMPDIFF(YEAR, client.created_at, CURDATE()) AS nbre_annee,
+            TIMESTAMPDIFF(MONTH, client.created_at, CURDATE()) AS nbre_mois
+        FROM 
+            client 
+        LEFT JOIN 
+            contact_client ON client.id_client = contact_client.id_client
+        WHERE 
+            est_supprime = 0
+        GROUP BY client.id_client
+            `;  
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}

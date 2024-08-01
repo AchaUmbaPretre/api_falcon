@@ -1,5 +1,5 @@
 const express = require("express");
-const { postClient, getClients, postClientContact, getClientAll, getClientCount, deleteClient, getClientCountJour, getClientCountHier, getClientCount7jours, getClientCount30jours, getClientCount1an, getClientOne, putClient, getClientRapport } = require("../controllers/clientController");
+const { postClient, getClients, postClientContact, getClientAll, getClientCount, deleteClient, getClientCountJour, getClientCountHier, getClientCount7jours, getClientCount30jours, getClientCount1an, getClientOne, putClient, getClientRapport, getClientRapportGen } = require("../controllers/clientController");
 const router = express.Router();
 
 router.get('/count', getClientCount)
@@ -15,6 +15,9 @@ router.get('/clientOne', getClientOne)
 router.post('/client', postClient)
 router.post('/clientContact', postClientContact)
 router.put('/client', putClient)
+
+
+router.get('/client_gen', getClientRapportGen)
 
 router.delete('/:id', deleteClient)
  
