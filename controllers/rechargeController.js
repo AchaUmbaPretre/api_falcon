@@ -10,7 +10,6 @@ exports.getRechargeClientTotal = (req, res) => {
     (
         SELECT COUNT(*)
         FROM traceur AS t
-        INNER JOIN affectations AS a ON t.id_traceur = a.id_traceur
         WHERE t.id_client = client.id_client
         AND t.id_etat_traceur = 7
     ) AS nbre_actif
