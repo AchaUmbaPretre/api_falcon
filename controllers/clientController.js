@@ -349,3 +349,24 @@ exports.getClientRapportGen = (req, res) => {
         return res.status(200).json(data);
     });
 }
+
+//Tarif client
+exports.postClientTarif = async (req, res) => {
+    const { id_client, tarifDetails } = req.body;
+
+    try {
+        const q = 'INSERT INTO clienttarif (`id_client`, `typeClientTarif`, `prixClientTarif`) VALUES ?';
+        
+        const values = tarifDetails.map(detail => [
+            id_client,
+            detail.type,
+            detail.prix
+        ]);
+
+        await db.query(q, [values]);
+        return res.json('Processus réussi');
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout des tarifs." });
+    }
+};

@@ -1,5 +1,5 @@
 const express = require("express");
-const { postClient, getClients, postClientContact, getClientAll, getClientCount, deleteClient, getClientCountJour, getClientCountHier, getClientCount7jours, getClientCount30jours, getClientCount1an, getClientOne, putClient, getClientRapport, getClientRapportGen } = require("../controllers/clientController");
+const { postClient, getClients, postClientContact, getClientAll, getClientCount, deleteClient, getClientCountJour, getClientCountHier, getClientCount7jours, getClientCount30jours, getClientCount1an, getClientOne, putClient, getClientRapport, getClientRapportGen, postClientTarif } = require("../controllers/clientController");
 const router = express.Router();
 
 router.get('/count', getClientCount)
@@ -20,5 +20,8 @@ router.put('/client', putClient)
 router.get('/client_gen', getClientRapportGen)
 
 router.delete('/:id', deleteClient)
+
+//Tarif
+router.post('/tarifForm', postClientTarif)
  
 module.exports = router;

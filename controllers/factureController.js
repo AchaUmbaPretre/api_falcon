@@ -140,14 +140,14 @@ exports.getOperationFacture = (req, res) => {
 
 
 exports.postFacture = (req, res) => {
-    const { id_client, date_facture, total, details, montant } = req.body;
+    const { id_client, date_facture, total, details, commentaire } = req.body;
 
-    db.query('INSERT INTO factures (id_client, date_facture, total) VALUES (?, ?, ?)', [id_client, date_facture, total], (err, result) => {
+    db.query('INSERT INTO factures (id_client, date_facture, total, commentaire) VALUES (?, ?, ?, ?)', [id_client, date_facture, total, commentaire], (err, result) => {
         if (err) throw err;
         const id_facture = result.insertId;
         details.forEach(detail => {
-            db.query('INSERT INTO facture_details (id_facture, id_vehicule, quantite, prix_unitaire, montant, id_remise, id_taxe) VALUES (?, ?, ?, ?, ?, ?,?)', 
-                [id_facture, detail, detail.quantite, detail.prix_unitaire, montant , detail.id_remise, detail.id_taxe], (err) => {
+            db.query('INSERT INTO facture_details (id_facture, id_vehicule, prix_unitaire, montant, id_remise, id_taxe) VALUES (?, ?, ?, ?, ?, ?)', 
+                [id_facture, detail.id_vehicule,detail.prix_unitaire, detail.prix , detail.id_remise, detail.id_taxe], (err) => {
                     if (err) throw err;
                 });
         });
