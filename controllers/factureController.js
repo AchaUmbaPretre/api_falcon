@@ -6,7 +6,7 @@ exports.getFacture = (req, res) => {
 
     const q = `
         SELECT factures.date_facture, factures.id_facture, factures.statut, factures.total, client.nom_client, 
-               facture_details.quantite, facture_details.prix_unitaire, facture_details.montant, remises.description, 
+                facture_details.prix_unitaire, facture_details.montant, remises.description, 
                taxes.description AS taxes_description 
         FROM factures
         INNER JOIN client ON factures.id_client = client.id_client
@@ -18,6 +18,29 @@ exports.getFacture = (req, res) => {
     `;
     
     db.query(q, [offset, parseInt(pageSize)], (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+};
+
+exports.getFactureOne = (req, res) => {
+    const { id_facture } = req.query;
+
+    const q = `
+            SELECT factures.date_facture, factures.total, client.nom_client, 
+                facture_details.montant,
+                vehicule.nom_vehicule
+            FROM factures
+            INNER JOIN client ON factures.id_client = client.id_client
+            INNER JOIN facture_details ON factures.id_facture = facture_details.id_facture
+            INNER JOIN vehicule ON facture_details.id_vehicule = vehicule.id_vehicule
+            LEFT JOIN remises ON facture_details.id_remise = remises.id_remise
+            LEFT JOIN taxes ON facture_details.id_taxe = taxes.id_taxes
+            WHERE factures.id_facture = ?
+            GROUP BY facture_details.id_facture_details
+            `;
+    
+    db.query(q, [id_facture], (error, data) => {
         if (error) res.status(500).send(error);
         return res.status(200).json(data);
     });
@@ -38,6 +61,21 @@ exports.getClientTarif = (req, res) => {
     const q = `
         SELECT clienttarif.*, client.nom_client FROM clienttarif 
         INNER JOIN client ON clienttarif.id_client = client.id_client
+    `;
+     
+    db.query(q, (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+}
+
+exports.getClientTarifOne = (req, res) => {
+    const {id_client} = req.query;
+
+    const q = `
+        SELECT clienttarif.*, client.nom_client FROM clienttarif 
+        INNER JOIN client ON clienttarif.id_client = client.id_client
+        WHERE clienttarif.id_client  = ${id_client}
     `;
      
     db.query(q, (error, data) => {
