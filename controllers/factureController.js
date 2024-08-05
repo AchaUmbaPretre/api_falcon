@@ -141,8 +141,8 @@ exports.getOperationFacture = (req, res) => {
         DATE_FORMAT(CONVERT_TZ(operations.date_operation, '+00:00', @@session.time_zone), '%Y-%m-%d') AS date_operation
     FROM operations 
         INNER JOIN client ON operations.id_client = client.id_client
-        LEFT JOIN traceur ON operations.id_traceur = traceur.id_traceur
-        LEFT JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
+        INNER JOIN traceur ON operations.id_traceur = traceur.id_traceur
+        INNER JOIN etat_traceur ON traceur.id_etat_traceur = etat_traceur.id_etat_traceur
         INNER JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
         INNER JOIN vehicule ON operations.id_vehicule = vehicule.id_vehicule
     WHERE operations.est_supprime = 0
