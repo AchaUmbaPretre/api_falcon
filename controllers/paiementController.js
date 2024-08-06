@@ -77,7 +77,7 @@ exports.getPaiementOne = (req, res) => {
 
 exports.postPaiement = async (req, res) => {
     const photoFile = req.file;
-    const photoUrl = `/uploads/${photoFile.filename}`;
+    const photoUrl = `/uploads/${photoFile?.filename}`;
 
     try {
         if (!req.body.id_client || !req.body.methode || !req.body.user_paiement ) {

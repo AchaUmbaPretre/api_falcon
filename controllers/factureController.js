@@ -29,6 +29,7 @@ exports.getFactureOne = (req, res) => {
     const q = `
             SELECT factures.date_facture, factures.total, client.nom_client, 
                 facture_details.montant,
+                facture_details.prix_unitaire,
                 vehicule.nom_vehicule
             FROM factures
             INNER JOIN client ON factures.id_client = client.id_client
@@ -185,7 +186,7 @@ exports.postFacture = (req, res) => {
         const id_facture = result.insertId;
         details.forEach(detail => {
             db.query('INSERT INTO facture_details (id_facture, id_vehicule, prix_unitaire, montant, id_remise, id_taxe) VALUES (?, ?, ?, ?, ?, ?)', 
-                [id_facture, detail.id_vehicule,detail.prix_unitaire, detail.prix , detail.id_remise, detail.id_taxe], (err) => {
+                [id_facture, detail.id_vehicule,detail.prix, detail.montant, detail.id_remise, detail.id_taxe], (err) => {
                     if (err) throw err;
                 });
         });
