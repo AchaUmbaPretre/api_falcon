@@ -287,7 +287,7 @@ exports.putClient = async (req, res) => {
 exports.deleteClient = (req, res) => {
     const id = req.params.id;
   
-    const q = "DELETE client WHERE id_client = ?";
+    const q = "DELETE FROM client WHERE id_client = ?";
   
     db.query(q, [id], (err, data) => {
       if (err) return res.send(err);

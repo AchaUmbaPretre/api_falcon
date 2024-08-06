@@ -663,4 +663,14 @@ exports.putTraceur = async (req, res) => {
     }
 }
 
+exports.deleteTraceur = (req, res) => {
+    const id = req.params.id;
+
+    const q = "DELETE FROM traceur WHERE id_traceur = ?";
+
+    db.query(q, [id], (err, data) => {
+        if (err) return res.status(500).json({ error: err.message });
+        return res.json({ message: 'Traceur supprimé avec succès.', data });
+    });
+};
 
