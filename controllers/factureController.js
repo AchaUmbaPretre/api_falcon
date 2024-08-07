@@ -1,27 +1,31 @@
 const { db } = require("./../config/database");
 
 exports.getFacture = (req, res) => {
-    const { page = 1, pageSize = 10 } = req.query;
+    const { page = 1, pageSize = 10, id_client } = req.query;
     const offset = (page - 1) * pageSize;
 
     const q = `
         SELECT factures.date_facture, factures.id_facture, factures.statut, factures.total, client.nom_client, 
-                facture_details.prix_unitaire, facture_details.montant, remises.description, 
+               facture_details.prix_unitaire, facture_details.montant, remises.description, 
                taxes.description AS taxes_description 
         FROM factures
         INNER JOIN client ON factures.id_client = client.id_client
         INNER JOIN facture_details ON factures.id_facture = facture_details.id_facture
         LEFT JOIN remises ON facture_details.id_remise = remises.id_remise
         LEFT JOIN taxes ON facture_details.id_taxe = taxes.id_taxes
+        ${id_client ? 'WHERE factures.id_client = ?' : ''}
         GROUP BY factures.id_facture
         LIMIT ?, ?
     `;
     
-    db.query(q, [offset, parseInt(pageSize)], (error, data) => {
-        if (error) res.status(500).send(error);
+    const queryParams = id_client ? [id_client, offset, parseInt(pageSize)] : [offset, parseInt(pageSize)];
+
+    db.query(q, queryParams, (error, data) => {
+        if (error) return res.status(500).send(error);
         return res.status(200).json(data);
     });
 };
+
 
 exports.getFactureOne = (req, res) => {
     const { id_facture } = req.query;

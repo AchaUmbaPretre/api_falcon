@@ -298,6 +298,7 @@ exports.deleteClient = (req, res) => {
 
 
 exports.getClientRapportGen = (req, res) => {
+    const { id_client } = req.query;
 
     const q = `
     SELECT 
@@ -340,6 +341,7 @@ exports.getClientRapportGen = (req, res) => {
         client.id_client = factures_count.id_client
     WHERE 
         est_supprime = 0
+        ${id_client ? `AND client.id_client = ${id_client}` : ""}
     GROUP BY 
         client.id_client;
             `;  

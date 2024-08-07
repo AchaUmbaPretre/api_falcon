@@ -19,6 +19,7 @@ router.put('/client', putClient)
 
 router.get('/client_gen', getClientRapportGen)
 
+
 router.delete('/:id', deleteClient)
 
 //Tarif
