@@ -298,7 +298,7 @@ exports.deleteClient = (req, res) => {
 
 
 exports.getClientRapportGen = (req, res) => {
-    const { id_client } = req.query;
+    const { id_client, startDate, endDate } = req.query;
 
     const q = `
     SELECT 
@@ -309,7 +309,8 @@ exports.getClientRapportGen = (req, res) => {
         TIMESTAMPDIFF(MONTH, client.created_at, CURDATE()) AS nbre_mois,
         IFNULL(vehicule_count.nbre_vehicule, 0) AS nbre_vehicule,
         IFNULL(factures_count.nbre_facture, 0) AS nbre_facture,
-        IFNULL(factures_count.total_facture, 0) AS montant_total_facture
+        IFNULL(factures_count.total_facture, 0) AS montant_total_facture,
+        IFNULL(total_paiement.total_paiement, 0) AS montant_total_paiement
     FROM 
         client 
     LEFT JOIN 
@@ -339,18 +340,33 @@ exports.getClientRapportGen = (req, res) => {
         ) AS factures_count
     ON 
         client.id_client = factures_count.id_client
+    LEFT JOIN 
+        (   
+            SELECT
+                id_client,
+                SUM(paiement.montant) AS total_paiement
+            FROM
+                paiement
+            GROUP BY
+            id_client
+        ) AS total_paiement
+    ON 
+        client.id_client = total_paiement.id_client
     WHERE 
         est_supprime = 0
         ${id_client ? `AND client.id_client = ${id_client}` : ""}
+        ${startDate ? `AND client.created_at >= '${startDate}'` : ""}
+        ${endDate ? `AND client.created_at <= '${endDate}'` : ""}
     GROUP BY 
         client.id_client;
-            `;  
-     
+    `;
+
     db.query(q, (error, data) => {
         if (error) res.status(500).send(error);
         return res.status(200).json(data);
     });
 }
+
 
 //Tarif client
 exports.postClientTarif = async (req, res) => {
