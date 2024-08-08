@@ -90,7 +90,7 @@ exports.getClientCount1an = (req, res) => {
 
 
 exports.getClients = (req, res) => {
-    const { page , limit  } = req.query;
+    const { page = 1, limit = 10 } = req.query; // Valeurs par défaut pour page et limit
     const offset = (page - 1) * limit;
 
     const q = `
@@ -99,7 +99,9 @@ exports.getClients = (req, res) => {
         IFNULL(vehicule_count.nbre_vehicule, 0) AS nbre_vehicule,
         IFNULL(operation_count.nbre_operation, 0) AS nbre_operation,
         IFNULL(factures_count.total_facture, 0) AS montant_total_facture,
-        IFNULL(total_paiement.total_paiement, 0) AS montant_total_paiement
+        IFNULL(total_paiement.total_paiement, 0) AS montant_total_paiement,
+        IFNULL(traceurActif.nbre_actif, 0) AS nbre_actif,
+        IFNULL(traceurSuspendu.nbre_suspendu, 0) AS nbre_suspendu
     FROM client 
     LEFT JOIN 
         (
@@ -149,6 +151,34 @@ exports.getClients = (req, res) => {
         ) AS total_paiement
     ON 
         client.id_client = total_paiement.id_client
+    LEFT JOIN
+        (
+            SELECT 
+                id_client,
+                COUNT(id_traceur) AS nbre_actif
+            FROM 
+                traceur 
+            WHERE 
+                traceur.id_etat_traceur = 7
+            GROUP BY
+                id_client
+        ) AS traceurActif
+    ON
+        client.id_client = traceurActif.id_client
+        LEFT JOIN
+        (
+            SELECT 
+                id_client,
+                COUNT(id_traceur) AS nbre_suspendu
+            FROM 
+                traceur 
+            WHERE 
+                traceur.id_etat_traceur = 6
+            GROUP BY
+                id_client
+        ) AS traceurSuspendu
+    ON
+        client.id_client = traceurSuspendu.id_client
     WHERE 
         est_supprime = 0
     LIMIT ? OFFSET ?
@@ -161,6 +191,7 @@ exports.getClients = (req, res) => {
         return res.status(200).json(data);
     });
 };
+
 
 
 exports.getClientRapport = (req, res) => {
