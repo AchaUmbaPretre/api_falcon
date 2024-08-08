@@ -90,13 +90,67 @@ exports.getClientCount1an = (req, res) => {
 
 
 exports.getClients = (req, res) => {
-    const { page = 1, limit = 10 } = req.query; 
+    const { page = 1, limit = 25 } = req.query;
     const offset = (page - 1) * limit;
 
     const q = `
-    SELECT *
+    SELECT 
+        client.*,
+        IFNULL(vehicule_count.nbre_vehicule, 0) AS nbre_vehicule,
+        IFNULL(operation_count.nbre_operation, 0) AS nbre_operation,
+        IFNULL(factures_count.total_facture, 0) AS montant_total_facture,
+        IFNULL(total_paiement.total_paiement, 0) AS montant_total_paiement
     FROM client 
-    WHERE est_supprime = 0
+    LEFT JOIN 
+        (
+            SELECT 
+                id_client, 
+                COUNT(*) AS nbre_vehicule
+            FROM 
+                vehicule
+            GROUP BY 
+                id_client
+        ) AS vehicule_count
+    ON 
+        client.id_client = vehicule_count.id_client
+    LEFT JOIN
+        (
+            SELECT
+                id_client,
+                COUNT(*) AS nbre_operation
+            FROM
+                operations
+            GROUP BY 
+                id_client
+        ) AS operation_count
+    ON
+        client.id_client = operation_count.id_client
+    LEFT JOIN 
+        (
+            SELECT 
+                id_client, 
+                SUM(total) AS total_facture
+            FROM 
+                factures
+            GROUP BY 
+                id_client
+        ) AS factures_count
+    ON 
+        client.id_client = factures_count.id_client
+    LEFT JOIN 
+        (   
+            SELECT
+                id_client,
+                SUM(montant) AS total_paiement
+            FROM
+                paiement
+            GROUP BY
+                id_client
+        ) AS total_paiement
+    ON 
+        client.id_client = total_paiement.id_client
+    WHERE 
+        est_supprime = 0
     LIMIT ? OFFSET ?
     `;
 
@@ -107,6 +161,7 @@ exports.getClients = (req, res) => {
         return res.status(200).json(data);
     });
 };
+
 
 exports.getClientRapport = (req, res) => {
     const filter = req.query.filter;
