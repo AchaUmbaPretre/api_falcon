@@ -90,7 +90,7 @@ exports.getClientCount1an = (req, res) => {
 
 
 exports.getClients = (req, res) => {
-    const { page = 1, limit = 25 } = req.query;
+    const { page , limit  } = req.query;
     const offset = (page - 1) * limit;
 
     const q = `
