@@ -88,7 +88,6 @@ exports.getClientCount1an = (req, res) => {
 }
 
 
-
 exports.getClients = (req, res) => {
     const { page = 1, limit = 10 } = req.query; // Valeurs par défaut pour page et limit
     const offset = (page - 1) * limit;
@@ -191,7 +190,6 @@ exports.getClients = (req, res) => {
         return res.status(200).json(data);
     });
 };
-
 
 
 exports.getClientRapport = (req, res) => {
