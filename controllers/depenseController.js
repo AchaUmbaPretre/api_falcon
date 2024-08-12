@@ -68,7 +68,7 @@ exports.getDepenseJour = (req, res) => {
     const q = `SELECT 
                 CASE
                     WHEN SUM(depense.montant) IS NOT NULL THEN ROUND(SUM(depense.montant), 2) + ROUND(SUM(depense.montant_franc * 0.00036), 2)
-                    ELSE ROUND(SUM(depense.montant_franc * 0.00036), 2)
+                    ELSE ROUND(SUM(depense.montant_franc * 0.00035), 2)
                 END AS total_depense
                 FROM depense
                   WHERE DATE(depense.date_depense) = CURDATE()

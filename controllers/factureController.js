@@ -51,6 +51,41 @@ exports.getFactureOne = (req, res) => {
     });
 };
 
+exports.getFactureRecu = (req, res) => {
+    const { id_facture } = req.query;
+
+    const q = `
+            SELECT 
+                factures.id_facture,
+                factures.date_facture, 
+                factures.total, 
+                factures.commentaire,
+                client.nom_client,
+                client.telephone,
+                client.adresse,
+                facture_details.prix_unitaire,
+                COUNT(facture_details.id_vehicule) AS nombre_vehicules,
+                SUM(facture_details.montant) AS sous_total,
+                ROUND(SUM(facture_details.montant) * 0.16, 2) AS taxe,
+                ROUND(SUM(facture_details.montant) * 1.16, 2) AS total_usd,
+                ROUND(SUM(facture_details.montant) * 1.16 / 0.00035, 2) AS total_cdf
+            FROM factures
+                INNER JOIN client ON factures.id_client = client.id_client
+                INNER JOIN facture_details ON factures.id_facture = facture_details.id_facture
+                INNER JOIN vehicule ON facture_details.id_vehicule = vehicule.id_vehicule
+                LEFT JOIN remises ON facture_details.id_remise = remises.id_remise
+                LEFT JOIN taxes ON facture_details.id_taxe = taxes.id_taxes
+                WHERE factures.id_facture = ?
+            GROUP BY factures.id_facture, factures.total, factures.commentaire, client.nom_client
+
+            `;
+    
+    db.query(q, [id_facture], (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+};
+
 exports.getTarif = (req, res) => {
     const q = `
         SELECT * FROM tarif
