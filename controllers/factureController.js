@@ -51,6 +51,23 @@ exports.getFactureOne = (req, res) => {
     });
 };
 
+exports.getFactureMontant = (req, res) => {
+    const { id_facture } = req.query;
+
+    const q = `
+                SELECT * 
+                    FROM 
+                factures 
+                    WHERE 
+                factures.id_facture = ?
+            `;
+    
+    db.query(q, [id_facture], (error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+};
+
 exports.getFactureRecu = (req, res) => {
     const { id_facture } = req.query;
 

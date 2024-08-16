@@ -143,6 +143,90 @@ exports.postPaiement = async (req, res) => {
 };
 
 
+exports.postPaiementOk = async (req, res) => {
+    const photoFile = req.file;
+    const photoUrl = `/uploads/${photoFile?.filename}`;
+    const { id_facture, id_client, montant, montant_tva, device, date_paiement, methode, user_paiement, ref, code_paiement, document, status } = req.body;
+    
+    const qInsert = 'INSERT INTO paiement (`id_facture`, `id_client`, `montant`, `montant_tva`, `device`, `date_paiement`, `methode`, `user_paiement`, `code_paiement`, `document`, `photo_url`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    const qUpdate = 'UPDATE paiement SET `ref` = ? WHERE `id_paiement` = ?';
+    const qSelectTotalPaye = 'SELECT SUM(montant) AS total_paye FROM paiement WHERE id_facture = ?';
+    const qSelectFactureTotal = 'SELECT total FROM factures WHERE id_facture = ?';
+    const qUpdateStatus = 'UPDATE factures SET `statut` = ? WHERE `id_facture` = ?';
+
+    const values = [
+        id_facture,
+        id_client,
+        montant,
+        montant_tva,
+        device,
+        date_paiement,
+        methode,
+        user_paiement,
+        code_paiement,
+        document,
+        photoUrl
+    ];
+
+    db.query(qInsert, values, (err, result) => {
+        if (err) {
+            console.error('Erreur lors de l\'insertion du paiement:', err);
+            return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du paiement." });
+        }
+
+        const insertId = result.insertId;
+        if (!insertId) {
+            console.error('Insertion failed:', result);
+            return res.status(500).json({ error: "L'insertion du paiement a échoué." });
+        }
+
+        const annee = new Date().getFullYear().toString().slice(-2); // Les deux derniers chiffres de l'année
+        const id_client_formatted = id_client.toString().padStart(2, '0'); // Formater sur deux chiffres
+        const id_paiement_formatted = insertId.toString().padStart(2, '0'); // Formater sur deux chiffres
+        const formattedRef = `${annee}${id_client_formatted}${id_paiement_formatted}`;
+
+        db.query(qUpdate, [formattedRef, insertId], (err) => {
+            if (err) {
+                console.error('Erreur lors de la mise à jour de la référence:', err);
+                return res.status(500).json({ error: "Une erreur s'est produite lors de la mise à jour de la référence." });
+            }
+
+            db.query(qSelectTotalPaye, [id_facture], (err, results) => {
+                if (err) {
+                    console.error('Erreur lors de la sélection du total payé:', err);
+                    return res.status(500).json({ error: "Une erreur s'est produite lors de la sélection du total payé." });
+                }
+                const total_paye = results[0]?.total_paye || 0;
+
+                db.query(qSelectFactureTotal, [id_facture], (err, results) => {
+                    if (err) {
+                        console.error('Erreur lors de la sélection du total de la facture:', err);
+                        return res.status(500).json({ error: "Une erreur s'est produite lors de la sélection du total de la facture." });
+                    }
+                    const total_facture = results[0]?.total || 0;
+
+                    let statut = 'non payé';
+                    if (total_paye >= total_facture) {
+                        statut = 'payé';
+                    } else if (total_paye > 0) {
+                        statut = 'partiellement payé';
+                    }
+
+                    db.query(qUpdateStatus, [statut, id_facture], (err) => {
+                        if (err) {
+                            console.error('Erreur lors de la mise à jour du statut de la facture:', err);
+                            return res.status(500).json({ error: "Une erreur s'est produite lors de la mise à jour du statut de la facture." });
+                        }
+                        res.json({ statut });
+                    });
+                });
+            });
+        });
+    });
+};
+
+
+
 exports.getPaiementMois = (req, res) => {
     const {months} = req.query;
   
