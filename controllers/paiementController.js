@@ -142,7 +142,7 @@ exports.postPaiement = async (req, res) => {
     }
 };
 
-exports.postPaiementOk = async (req, res) => {
+/* exports.postPaiementOk = async (req, res) => {
     const photoFile = req.file;
     const photoUrl = `/uploads/${photoFile?.filename}`;
     const { id_facture, id_client, montant, montant_tva, device, date_paiement, methode, user_paiement } = req.body;
@@ -168,10 +168,10 @@ exports.postPaiementOk = async (req, res) => {
                     console.error('Erreur lors de la sélection du total de la facture:', err);
                     return res.status(500).json({ error: "Une erreur s'est produite lors de la sélection du total de la facture." });
                 }
-                const total_facture = results[0]?.total || 0;
+                const total_facture = montant || 0;
 
                 // Vérifier si le montant total a déjà été payé
-                if (total_paye >= total_facture) {
+                if (montant >= total_facture) {
                     return res.status(400).json({ error: "Le montant total de la facture a déjà été payé." });
                 }
 
@@ -219,7 +219,7 @@ exports.postPaiementOk = async (req, res) => {
                             }
 
                             // Mettre à jour le statut de la facture
-                            const statut = (total_paye + montant >= total_facture) ? 'payé' : 'partiellement payé';
+                            const statut = (montant >= total_facture) ? 'payé' : 'partiellement payé';
                             db.query(qUpdateStatus, [statut, id_facture], (err) => {
                                 if (err) {
                                     console.error('Erreur lors de la mise à jour du statut de la facture:', err);
@@ -233,6 +233,235 @@ exports.postPaiementOk = async (req, res) => {
             });
         });
     } catch (err) {
+        console.error('Une erreur s\'est produite:', err);
+        res.status(500).json({ error: "Une erreur s'est produite lors du traitement de la demande." });
+    }
+}; */
+
+
+/* exports.postPaiementOk = async (req, res) => {
+    const photoFile = req.file;
+    const photoUrl = `/uploads/${photoFile?.filename}`;
+    const { id_facture, id_client, montant, montant_tva, device, date_paiement, methode, user_paiement } = req.body;
+    
+    const qInsert = 'INSERT INTO paiement (`id_facture`, `id_client`, `montant`, `montant_tva`, `device`, `date_paiement`, `methode`, `user_paiement`, `code_paiement`, `document`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    const qUpdate = 'UPDATE paiement SET `ref` = ? WHERE `id_paiement` = ?';
+    const qSelectFactureStatus = 'SELECT statut FROM factures WHERE id_facture = ?';
+    const qSelectTotalPaye = 'SELECT SUM(montant) AS total_paye FROM paiement WHERE id_facture = ?';
+    const qSelectFactureTotal = 'SELECT total FROM factures WHERE id_facture = ?';
+    const qUpdateStatus = 'UPDATE factures SET `statut` = ? WHERE `id_facture` = ?';
+
+    try {
+        // Vérifier le statut actuel de la facture
+        db.query(qSelectFactureStatus, [id_facture], (err, results) => {
+            if (err) {
+                console.error('Erreur lors de la sélection du statut de la facture:', err);
+                return res.status(500).json({ error: "Une erreur s'est produite lors de la sélection du statut de la facture." });
+            }
+            const statut_facture = results[0]?.statut;
+
+            // Si la facture est déjà payée, renvoyer un message d'erreur
+            if (statut_facture === 'payé') {
+                return res.status(400).json({ error: "La facture a déjà été entièrement payée." });
+            }
+
+            // Vérifier le total déjà payé pour cette facture
+            db.query(qSelectTotalPaye, [id_facture], (err, results) => {
+                if (err) {
+                    console.error('Erreur lors de la sélection du total payé:', err);
+                    return res.status(500).json({ error: "Une erreur s'est produite lors de la sélection du total payé." });
+                }
+                const total_paye = results[0]?.total_paye || 0;
+
+                // Vérifier le total de la facture
+                db.query(qSelectFactureTotal, [id_facture], (err, results) => {
+                    if (err) {
+                        console.error('Erreur lors de la sélection du total de la facture:', err);
+                        return res.status(500).json({ error: "Une erreur s'est produite lors de la sélection du total de la facture." });
+                    }
+                    const total_facture = results[0]?.total || 0;
+
+                    // Vérifier si le montant total a déjà été payé
+                    if (total_paye + montant >= total_facture) {
+                        // Mettre à jour le statut de la facture à 'payé'
+                        db.query(qUpdateStatus, ['payé', id_facture], (err) => {
+                            if (err) {
+                                console.error('Erreur lors de la mise à jour du statut de la facture:', err);
+                                return res.status(500).json({ error: "Une erreur s'est produite lors de la mise à jour du statut de la facture." });
+                            }
+                            return res.status(400).json({ error: "Le montant total de la facture a déjà été payé." });
+                        });
+                    } else {
+                        // Si le paiement est possible, procéder à l'insertion
+                        const values = [
+                            id_facture,
+                            id_client,
+                            montant,
+                            montant_tva,
+                            device,
+                            date_paiement,
+                            methode,
+                            user_paiement,
+                            null,  // code_paiement sera mis à jour après l'insertion
+                            photoUrl
+                        ];
+
+                        db.query(qInsert, values, (err, result) => {
+                            if (err) {
+                                console.error('Erreur lors de l\'insertion du paiement:', err);
+                                return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du paiement." });
+                            }
+
+                            const insertId = result.insertId;
+                            const annee = new Date().getFullYear().toString().slice(-2);
+                            const id_client_formatted = id_client.toString().padStart(2, '0');
+                            const id_paiement_formatted = insertId.toString().padStart(2, '0');
+                            const formattedRef = `${annee}${id_client_formatted}${id_paiement_formatted}`;
+
+                            // Générer le code_paiement avec un nombre aléatoire à 6 chiffres
+                            const code_paiement = Math.floor(100000 + Math.random() * 900000).toString();
+
+                            // Mettre à jour la référence et le code_paiement
+                            db.query(qUpdate, [formattedRef, insertId], (err) => {
+                                if (err) {
+                                    console.error('Erreur lors de la mise à jour de la référence:', err);
+                                    return res.status(500).json({ error: "Une erreur s'est produite lors de la mise à jour de la référence." });
+                                }
+
+                                const qUpdateCodePaiement = 'UPDATE paiement SET `code_paiement` = ? WHERE `id_paiement` = ?';
+                                db.query(qUpdateCodePaiement, [code_paiement, insertId], (err) => {
+                                    if (err) {
+                                        console.error('Erreur lors de la mise à jour du code de paiement:', err);
+                                        return res.status(500).json({ error: "Une erreur s'est produite lors de la mise à jour du code de paiement." });
+                                    }
+
+                                    // Mettre à jour le statut de la facture si nécessaire
+                                    const statut = (total_paye + montant >= total_facture) ? 'payé' : 'partiellement payé';
+                                    db.query(qUpdateStatus, [statut, id_facture], (err) => {
+                                        if (err) {
+                                            console.error('Erreur lors de la mise à jour du statut de la facture:', err);
+                                            return res.status(500).json({ error: "Une erreur s'est produite lors de la mise à jour du statut de la facture." });
+                                        }
+                                        res.json({ statut, code_paiement });
+                                    });
+                                });
+                            });
+                        });
+                    }
+                });
+            });
+        });
+    } catch (err) {
+        console.error('Une erreur s\'est produite:', err);
+        res.status(500).json({ error: "Une erreur s'est produite lors du traitement de la demande." });
+    }
+}; */
+
+exports.postPaiementOk = async (req, res) => {
+    const photoFile = req.file;
+    const photoUrl = `/uploads/${photoFile?.filename}`;
+    const { id_facture, id_client, montant, montant_tva, device, date_paiement, methode, user_paiement } = req.body;
+    
+    const qInsert = 'INSERT INTO paiement (`id_facture`, `id_client`, `montant`, `montant_tva`, `device`, `date_paiement`, `methode`, `user_paiement`, `code_paiement`, `document`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+    const qUpdate = 'UPDATE paiement SET `ref` = ? WHERE `id_paiement` = ?';
+    const qSelectFactureStatus = 'SELECT statut FROM factures WHERE id_facture = ?';
+    const qSelectTotalPaye = 'SELECT SUM(montant) AS total_paye FROM paiement WHERE id_facture = ?';
+    const qSelectFactureTotal = 'SELECT total FROM factures WHERE id_facture = ?';
+    const qUpdateStatus = 'UPDATE factures SET `statut` = ? WHERE `id_facture` = ?';
+
+    try {
+        db.query(qSelectFactureStatus, [id_facture], (err, results) => {
+            if(err) {
+                console.error('Erreur lors de la sélection du statut de la facture:', err);
+                return res.status(500).json({ error: "Une erreur s'est produite lors de la sélection du statut de la facture." });
+            }
+            const statut_facture = results[0]?.statut;
+            console.log(statut_facture)
+            if (statut_facture === 'payé') {
+                return res.status(400).json({ error: "La facture a déjà été entièrement payée." });
+            }
+
+            db.query(qSelectTotalPaye, [id_facture], (err, results) =>{
+                if(err) {
+                    console.error('Erreur lors de la sélection du total payé:', err);
+                    return res.status(500).json({ error: "Une erreur s'est produite lors de la sélection du total payé." });
+                }
+                const total_paye = results[0]?.total_paye || 0;
+                
+                db.query(qSelectFactureTotal, [id_facture], (err, results) => {
+                    if (err) {
+                        console.error('Erreur lors de la sélection du total de la facture:', err);
+                        return res.status(500).json({ error: "Une erreur s'est produite lors de la sélection du total de la facture." });
+                    }
+                    const total_facture = results[0]?.total || 0;
+
+                    if(total_paye + montant >= total_facture) {
+                        db.query(qUpdateStatus, ['payé', id_facture], (err) => {
+                            if (err) {
+                                console.error('Erreur lors de la mise à jour du statut de la facture:', err);
+                                return res.status(500).json({ error: "Une erreur s'est produite lors de la mise à jour du statut de la facture." });
+                            }
+                            return res.status(400).json({ error: "Le montant total de la facture a déjà été payé." });
+                        })
+                    } else {
+                        const values = [
+                            id_facture,
+                            id_client,
+                            montant,
+                            montant_tva,
+                            device,
+                            date_paiement,
+                            methode,
+                            user_paiement,
+                            null,  // code_paiement sera mis à jour après l'insertion
+                            photoUrl
+                        ];
+
+                        db.query(qInsert, values, (err, result) => {
+                            if (err) {
+                                console.error('Erreur lors de l\'insertion du paiement:', err);
+                                return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du paiement." });
+                            }
+
+                            const insertId = result.insertId;
+                            const annee = new Date().getFullYear().toString().slice(-2);
+                            const id_client_formatted = id_client.toString().padStart(2, '0');
+                            const id_paiement_formatted = insertId.toString().padStart(2, '0');
+                            const formattedRef = `${annee}${id_client_formatted}${id_paiement_formatted}`;
+
+                            // Générer le code_paiement avec un nombre aléatoire à 6 chiffres
+                            const code_paiement = Math.floor(100000 + Math.random() * 900000).toString();
+                            db.query(qUpdate, [formattedRef, insertId], (err) => {
+                                if (err) {
+                                    console.error('Erreur lors de la mise à jour de la référence:', err);
+                                    return res.status(500).json({ error: "Une erreur s'est produite lors de la mise à jour de la référence." });
+                                }
+
+                                const qUpdateCodePaiement = 'UPDATE paiement SET `code_paiement` = ? WHERE `id_paiement` = ?';
+                                db.query(qUpdateCodePaiement, [code_paiement, insertId], (err) => {
+                                    if (err) {
+                                        console.error('Erreur lors de la mise à jour du code de paiement:', err);
+                                        return res.status(500).json({ error: "Une erreur s'est produite lors de la mise à jour du code de paiement." });
+                                    }
+
+                                    const statut = (total_paye + montant >= total_facture) ? 'payé' : 'partiellement payé';
+                                    db.query(qUpdateStatus, [statut, id_facture], (err) => {
+                                        if (err) {
+                                            console.error('Erreur lors de la mise à jour du statut de la facture:', err);
+                                            return res.status(500).json({ error: "Une erreur s'est produite lors de la mise à jour du statut de la facture." });
+                                        }
+
+                                        res.json({ statut, code_paiement });
+                                    })
+                                })
+                            })
+
+                        })
+                    }
+                })
+            })
+        })
+    } catch (error) {
         console.error('Une erreur s\'est produite:', err);
         res.status(500).json({ error: "Une erreur s'est produite lors du traitement de la demande." });
     }

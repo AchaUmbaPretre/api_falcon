@@ -9,7 +9,6 @@ const db = mysql.createPool({
 });
 
 
-// Gestion des erreurs de connexion
 db.getConnection((err, connection) => {
     if (err) {
         console.error('Erreur de connexion à la base de données :', err);
@@ -22,7 +21,7 @@ db.getConnection((err, connection) => {
         }
     }
     if (connection) {
-        connection.release(); // Libère la connexion
+        connection.release();
     }
     return;
 });
