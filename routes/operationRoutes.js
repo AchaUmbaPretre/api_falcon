@@ -1,5 +1,5 @@
 const express = require("express");
-const { getOperation, postOperation, getSite, getTypeOperation, getOperationCount, postSite, postSignature, getOperationCountJour, getOperationCountHier, getOperationCount7jours, getOperationCount30jours, getOperationCount1an, envoieEmail, getOperationRapport } = require("../controllers/operationController");
+const { getOperation, postOperation, getSite, getTypeOperation, getOperationCount, postSite, postSignature, getOperationCountJour, getOperationCountHier, getOperationCount7jours, getOperationCount30jours, getOperationCount1an, envoieEmail, getOperationRapport, getOperationRapportCount } = require("../controllers/operationController");
 const router = express.Router();
 
 router.get('/count', getOperationCount)
@@ -10,6 +10,7 @@ router.get('/count30jours', getOperationCount30jours)
 router.get('/count1an', getOperationCount1an)
 router.get('/', getOperation)
 router.get('/operation_rapport', getOperationRapport)
+router.get('/operation_rapport_count', getOperationRapportCount)
 
 const multer = require('multer'); 
 const upload = multer({ dest: 'public/uploads/' });
