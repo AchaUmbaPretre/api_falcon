@@ -206,36 +206,36 @@ exports.getOperationRapport = (req, res) => {
 exports.getOperationRapportCount = (req, res) => {
   const filter = req.query.filter;
 
+  let dateCondition = '';
+  if (filter === 'today') {
+      dateCondition = `AND DATE(operations.date_operation) = CURDATE()`;
+  } else if (filter === 'yesterday') {
+      dateCondition = `AND DATE(operations.date_operation) = CURDATE() - INTERVAL 1 DAY`;
+  } else if (filter === 'last7days') {
+      dateCondition = `AND DATE(operations.date_operation) >= CURDATE() - INTERVAL 7 DAY`;
+  } else if (filter === 'last30days') {
+      dateCondition = `AND DATE(operations.date_operation) >= CURDATE() - INTERVAL 30 DAY`;
+  } else if (filter === 'last1year') {
+      dateCondition = `AND DATE(operations.date_operation) >= CURDATE() - INTERVAL 1 YEAR`;
+  }
+
   let q = `
       SELECT COUNT(id_operations) AS nbre_operation,
-          (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 1) AS nbre_installation,
-          (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 2) AS nbre_transfert,
-          (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 3) AS nbre_dementelement,
-          (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 4) AS nbre_controle_technique,
-          (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 5) AS nbre_remplacement
+          (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 1 AND operations.est_supprime = 0 ${dateCondition}) AS nbre_installation,
+          (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 2 AND operations.est_supprime = 0 ${dateCondition}) AS nbre_transfert,
+          (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 3 AND operations.est_supprime = 0 ${dateCondition}) AS nbre_dementelement,
+          (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 4 AND operations.est_supprime = 0 ${dateCondition}) AS nbre_controle_technique,
+          (SELECT COUNT(id_operations) FROM operations WHERE operations.id_type_operations = 5 AND operations.est_supprime = 0 ${dateCondition}) AS nbre_remplacement
       FROM operations 
-      INNER JOIN client ON operations.id_client = client.id_client
-      INNER JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
-      WHERE operations.est_supprime = 0
+      WHERE operations.est_supprime = 0 ${dateCondition}
   `;
-  
-      if (filter === 'today') {
-          q += ` AND DATE(operations.date_operation) = CURDATE()`;
-      } else if (filter === 'yesterday') {
-          q += ` AND DATE(operations.date_operation) = CURDATE() - INTERVAL 1 DAY`;
-      } else if (filter === 'last7days') {
-          q += ` AND DATE(operations.date_operation) >= CURDATE() - INTERVAL 7 DAY`;
-      } else if (filter === 'last30days') {
-          q += ` AND DATE(operations.date_operation) >= CURDATE() - INTERVAL 30 DAY`;
-      } else if (filter === 'last1year') {
-          q += ` AND DATE(operations.date_operation) >= CURDATE() - INTERVAL 1 YEAR`;
-      }
 
   db.query(q, (error, data) => {
       if (error) res.status(500).send(error);
       return res.status(200).json(data);
   });
 }
+
 
 exports.postOperationRempl = async (req, res) => {
 
