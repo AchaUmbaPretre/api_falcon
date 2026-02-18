@@ -116,6 +116,25 @@ exports.getVehicule = (req, res) => {
     });
 };
 
+exports.getVehiculeOne = (req, res) => {
+    const { id_vehicule } = req.query;
+
+    let q = `
+       SELECT *
+        FROM vehicule 
+        WHERE id_vehicule = ?
+    `;
+
+    const params = id_vehicule ? [id_vehicule] : [];
+
+    db.query(q, params, (error, data) => {
+        if (error) {
+            return res.status(500).send(error);
+        }
+        return res.status(200).json(data);
+    });
+};
+
 exports.getVehiculeRapport = (req, res) => {
     const filter = req.query.filter;
 
@@ -193,7 +212,6 @@ exports.getVehiculeRapport = (req, res) => {
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout du véhicule." });
     }
 } */
-
 
 exports.postVehicule = async (req, res) => {
     try {
