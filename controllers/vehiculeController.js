@@ -135,6 +135,112 @@ exports.getVehiculeOne = (req, res) => {
     });
 };
 
+exports.putVehicule = (req, res) => {
+  const { id_vehicule } = req.body;
+
+  console.log(id_vehicule)
+
+  if (!id_vehicule || isNaN(id_vehicule)) {
+    return res.status(400).json({ error: "ID du véhicule fourni non valide" });
+  }
+
+  const {
+    nom_vehicule,
+    id_marque,
+    id_modele,
+    matricule,
+    id_client,
+    code,
+  } = req.body;
+
+  if (!nom_vehicule || !id_marque || !id_modele) {
+    return res.status(400).json({ error: "Nom, marque et modèle sont obligatoires" });
+  }
+
+  // Commencer une transaction
+  db.getConnection((err, connection) => {
+    if (err) {
+      console.error("Erreur connexion DB:", err);
+      return res.status(500).json({ error: "Erreur serveur" });
+    }
+
+    connection.beginTransaction((err) => {
+      if (err) {
+        connection.release();
+        return res.status(500).json({ error: "Erreur transaction DB" });
+      }
+
+      // 1️⃣ Mise à jour du véhicule
+      const qVehicule = `
+        UPDATE vehicule
+        SET 
+          nom_vehicule = ?,
+          id_marque = ?,
+          id_modele = ?,
+          matricule = ?,
+          id_client = ?,
+          code = ?
+        WHERE id_vehicule = ?
+      `;
+      const valuesVehicule = [
+        nom_vehicule,
+        id_marque,
+        id_modele,
+        matricule || null,
+        id_client || null,
+        code || null,
+        id_vehicule
+      ];
+
+      connection.query(qVehicule, valuesVehicule, (err, result) => {
+        if (err) {
+          console.error("Erreur update véhicule:", err);
+          return connection.rollback(() => {
+            connection.release();
+            res.status(500).json({ error: "Erreur lors de la mise à jour du véhicule" });
+          });
+        }
+
+        if (result.affectedRows === 0) {
+          return connection.rollback(() => {
+            connection.release();
+            res.status(404).json({ error: "Véhicule introuvable" });
+          });
+        }
+
+        // 2️⃣ Mise à jour des traceurs liés
+        const qTraceur = `
+          UPDATE traceur t
+          SET t.id_client = ?
+          WHERE t.id_vehicule = ?
+        `;
+
+        connection.query(qTraceur, [id_client || null, id_vehicule], (err) => {
+          if (err) {
+            console.error("Erreur update traceurs:", err);
+            return connection.rollback(() => {
+              connection.release();
+              res.status(500).json({ error: "Erreur lors de la mise à jour des traceurs" });
+            });
+          }
+
+          // ✅ Tout ok, commit
+          connection.commit((err) => {
+            connection.release();
+            if (err) {
+              console.error("Erreur commit transaction:", err);
+              return res.status(500).json({ error: "Erreur transaction DB" });
+            }
+
+            res.json({ message: "Véhicule et traceurs mis à jour avec succès" });
+          });
+        });
+      });
+    });
+  });
+};
+
+
 exports.getVehiculeRapport = (req, res) => {
     const filter = req.query.filter;
 

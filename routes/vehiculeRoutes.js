@@ -1,5 +1,5 @@
 const express = require("express");
-const { getVehicule, postVehicule, getMarque, postMarque, getVehiculeCount, deleteMarque, getModeleOne, getVehiculeCountJour, getVehiculeCountHier, getVehiculeCount7jours, getVehiculeCount30jours, getVehiculeCount1an, getVehiculeRapport, getVehiculeRapportGen } = require("../controllers/vehiculeController");
+const { getVehicule, postVehicule, getMarque, postMarque, getVehiculeCount, deleteMarque, getModeleOne, getVehiculeCountJour, getVehiculeCountHier, getVehiculeCount7jours, getVehiculeCount30jours, getVehiculeCount1an, getVehiculeRapport, getVehiculeRapportGen, getVehiculeOne, putVehicule } = require("../controllers/vehiculeController");
 const verifyToken = require("../midllewares/verifyToken");
 const router = express.Router();
 
@@ -10,6 +10,9 @@ router.get('/count7jours', getVehiculeCount7jours)
 router.get('/count30jours', getVehiculeCount30jours)
 router.get('/count1an', getVehiculeCount1an)
 router.get('/',getVehicule)
+router.get('/one',getVehiculeOne)
+router.put('/vehicule_update', putVehicule)
+
 router.get('/vehicule_rapport',getVehiculeRapport)
 router.post('/', postVehicule)
 
