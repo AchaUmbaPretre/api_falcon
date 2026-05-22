@@ -150,6 +150,38 @@ exports.getOperation = (req, res) => {
     });
 }
 
+exports.getDerniereOperationAll = (req, res) => {
+
+    let q = `
+        SELECT 
+            operations.id_operations, 
+            vehicule.id_falcon,
+            vehicule.name_falcon,
+            traceur.code,
+            type_operations.nom_type_operations AS type_operations, 
+            DATE_FORMAT(CONVERT_TZ(operations.date_operation, '+00:00', @@session.time_zone), '%Y-%m-%d') AS date_operation
+        FROM operations 
+            INNER JOIN client ON operations.id_client = client.id_client
+            INNER JOIN traceur ON operations.id_traceur = traceur.id_traceur
+            INNER JOIN type_operations ON operations.id_type_operations = type_operations.id_type_operations
+            INNER JOIN vehicule ON operations.id_vehicule = vehicule.id_vehicule
+            INNER JOIN marque ON vehicule.id_marque = marque.id_marque
+        WHERE operations.est_supprime = 0
+            AND operations.date_operation = (
+                SELECT MAX(date_operation) 
+                FROM operations o2 
+                WHERE o2.id_vehicule = operations.id_vehicule 
+                    AND o2.est_supprime = 0
+            )
+        ORDER BY vehicule.id_vehicule
+    `;
+
+    db.query(q,(error, data) => {
+        if (error) res.status(500).send(error);
+        return res.status(200).json(data);
+    });
+};
+
 exports.getOperationRapport = (req, res) => {
   const filter = req.query.filter;
 
