@@ -93,10 +93,11 @@ exports.getVehiculeCount1an = (req, res) => {
     });
 }
 
+//Vehicule
 exports.getVehicule = (req, res) => {
     const id_client = req.query.id_client;
     let q = `
-       SELECT vehicule.id_marque, vehicule.nom_vehicule, vehicule.id_vehicule, vehicule.matricule,vehicule.created_at, marque.nom_marque, client.nom_client,modeles.modele, traceur.code
+       SELECT vehicule.id_marque, vehicule.nom_vehicule, vehicule.id_vehicule, vehicule.matricule, vehicule.id_falcon, vehicule.name_falcon, vehicule.created_at, marque.nom_marque, client.nom_client,modeles.modele, traceur.code
         FROM vehicule 
         INNER JOIN marque ON vehicule.id_marque = marque.id_marque 
         INNER JOIN client ON client.id_client = vehicule.id_client 
@@ -135,10 +136,36 @@ exports.getVehiculeOne = (req, res) => {
     });
 };
 
+exports.getVehiculeClientById = (req, res) => {
+    const { id_client } = req.query;
+
+    let q = `
+       SELECT 
+           v.nom_vehicule, 
+           v.matricule, 
+           v.code, 
+           v.id_falcon, 
+           v.name_falcon,
+           m.nom_marque, 
+           mo.modele
+        FROM vehicule v
+        LEFT JOIN marque m ON v.id_marque = m.id_marque
+        LEFT JOIN modeles mo ON v.id_modele = mo.id_modele
+        WHERE v.id_client = ?
+    `;
+
+    const params = id_client ? [id_client] : [];
+
+    db.query(q, params, (error, data) => {
+        if (error) {
+            return res.status(500).send(error);
+        }
+        return res.status(200).json(data);
+    });
+};
+
 exports.putVehicule = (req, res) => {
   const { id_vehicule } = req.body;
-
-  console.log(id_vehicule)
 
   if (!id_vehicule || isNaN(id_vehicule)) {
     return res.status(400).json({ error: "ID du véhicule fourni non valide" });
@@ -471,3 +498,39 @@ ON
         return res.status(200).json(data);
     });
 }
+
+exports.putRelierVehiculeFalcon = async (req, res) => {
+  try {
+    const { id_vehicule } = req.query;
+    const { id_falcon, name_falcon } = req.body;
+
+    console.log(req.query, req.body)
+
+    if (!id_vehicule || !id_falcon) {
+      return res.status(400).json({ message: "Paramètres manquants (id_vehicule ou id_falcon)." });
+    }
+
+    // 1️⃣ Supprimer l'ancien lien avec ce capteur
+    const q1 = "UPDATE vehicule SET id_falcon = NULL, name_falcon = NULL WHERE id_falcon = ?";
+    await new Promise((resolve, reject) => {
+      db.query(q1, [id_falcon], (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+
+    // 2️⃣ Lier le nouveau véhicule
+    const q2 = "UPDATE vehicule SET id_falcon = ?, name_falcon = ? WHERE id_vehicule = ?";
+    await new Promise((resolve, reject) => {
+      db.query(q2, [id_falcon, name_falcon, id_vehicule], (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+
+    return res.status(200).json({ message: "Véhicule relié/mis à jour avec succès." });
+  } catch (error) {
+    console.error("Erreur inattendue:", error);
+    return res.status(500).json({ message: "Erreur inattendue côté serveur." });
+  }
+};
