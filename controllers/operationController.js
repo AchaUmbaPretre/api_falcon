@@ -173,6 +173,7 @@ exports.getDerniereOperationAll = (req, res) => {
                 WHERE o2.id_vehicule = operations.id_vehicule 
                     AND o2.est_supprime = 0
             )
+        GROUP BY vehicule.id_vehicule
         ORDER BY vehicule.id_vehicule
     `;
 
@@ -266,8 +267,7 @@ exports.getOperationRapportCount = (req, res) => {
       if (error) res.status(500).send(error);
       return res.status(200).json(data);
   });
-}
-
+};
 
 exports.postOperationRempl = async (req, res) => {
 
@@ -324,7 +324,7 @@ exports.postOperationRempl = async (req, res) => {
         console.error(error);
         return res.status(500).json({ error: "Une erreur s'est produite lors de l'ajout d'opération." });
     }
-}
+};
 
 /* exports.postOperation = async (req, res) => {
     try {
