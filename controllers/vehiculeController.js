@@ -142,6 +142,7 @@ exports.getVehiculeClientById = (req, res) => {
     let q = `
        SELECT 
            v.nom_vehicule, 
+           v.id_vehicule,
            v.matricule, 
            v.code, 
            v.id_falcon, 
